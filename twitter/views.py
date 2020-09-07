@@ -539,6 +539,10 @@ def twitter_user(request, id_str):
         return render(request, 'twitter_user.html', context)
     elif 'POST' == request.method:
         if 'action' in request.POST and 'fetch' == request.POST['action']:
+            if not request.user.is_authenticated:
+                messages.add_message(request, messages.ERROR, 'You must be authenticated to perform this operation')
+                response = _messages_response(request)
+                return JsonResponse(response)
             twitter_user = get_object_or_404(TwitterUser, pk=int(id_str))
             [error_response, api] = _get_global_api(request)
             if error_response is not None:
