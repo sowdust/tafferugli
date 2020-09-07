@@ -1,0 +1,44 @@
+<div class="form-group">
+  <input type="text" name="metric_name" class="form-control" placeholder="Name" aria-label="Name">
+</div>
+<div class="alert alert-warning" role="alert">
+  This metric can take a long time if using Twitter APIs: Twitter imposes strict rate limits that make retrieving friends/followers a time consuming procedure.
+</div>
+
+<div class="form-group">
+    <label>Do you want to use the Twitter API to fetch friends and followers of target users?</label><br>
+<div class="form-check-inline">
+  <input class="form-check-input" type="radio" value="true" name="retrieve_followers" id="retrieve_followers_true" checked>
+  <label class="form-check-label" for="defaultCheck2">
+    Retrieve data
+  </label>
+</div>
+<div class="form-check-inline">
+  <input class="form-check-input" type="radio" value="false" name="retrieve_followers" id="retrieve_followers_false">
+  <label class="form-check-label" for="defaultCheck2">
+    Only use data already present in the database
+  </label>
+</div>
+</div>
+
+
+<div class="form-group">
+  <label for="max_twitter_users">Don't run the metric if the target users are more than this number</label>
+  <input type="number" name="max_twitter_users" id="max_twitter_users" class="form-control" placeholder="Max # of target users" value="1000">
+</div>
+
+<div class="form-group">
+  <label for="max_friends">Don't retrieve friends if the user has more than</label>
+  <input type="number" name="max_friends" id="max_friends" class="form-control" placeholder="Max # of friends" value="15000">
+</div>
+<div class="form-group">
+  <label for="max_followers">Don't retrieve followers if the user has more than</label>
+  <input type="number" name="max_followers" id="max_followers" class="form-control" placeholder="Max # of followers" value="15000">
+</div>
+<div class="form-group">
+  <label for="min_degree">Don't include in the Javascript graph users that have less than this # of relationships (useful to have a not too crowded graph)</label>
+  <input type="number" name="min_degree" id="min_degree" class="form-control" placeholder="Min degree" value="0">
+</div>
+<div class="form-group">
+  <textarea class="form-control" name="metric_description" placeholder="Description"></textarea>
+</div>

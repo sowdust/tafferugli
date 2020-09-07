@@ -1,0 +1,215 @@
+{% load static %}
+{% load bootstrap4 %}
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+    {% bootstrap_css %}
+    {% bootstrap_javascript jquery='full' %}
+    <link rel="stylesheet" href="https://bootswatch.com/4/darkly/bootstrap.css"/>
+    <script src="{% static 'js/js.js' %}"></script>
+    <!-- MDBootstrap Datatables  -->
+    <link href="{% static 'mdb/css/addons/datatables.min.css' %}" rel="stylesheet">
+    <!-- MDBootstrap Datatables  -->
+    <script type="text/javascript" src="{% static 'mdb/js/addons/datatables.min.js' %}"></script>
+    <!-- Font Awesome (for arrows) -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css">
+    <link rel="shortcut icon" type="image/icon" href="{% static 'favicon.ico' %}"/>
+    <link href=”{{ STATIC_URL }}jquery-autosuggest/css/autoSuggest-upshot.css”
+        type=”text/css” media=”all” rel=”stylesheet” />
+    <script type=”text/javascript”
+        src=”{{ STATIC_URL }}jquery-autosuggest/js/jquery.autoSuggest.minified.js”> </script>
+    {% block custom_head %}
+    {% endblock %}
+    <script>
+        {% block script %}
+        {% endblock %}
+    </script>
+    <style type="text/css">
+        /* to avoid footer overlapping content */
+        body {
+            padding-bottom: 80px;
+        }
+        #header-img {
+            width: 200px;
+            margin: 0;
+            margin-bottom: 20px;
+            padding: 0;
+        }
+    </style>
+        <title>Tafferugli {% block title %}{% endblock %} </title>
+    </head>
+    <body>
+
+<!-- CREATE NEW TAG MODAL -->
+<div class="modal fade" id="create_tag_modal" tabindex="-1" role="dialog" aria-labelledby="create_tag_modal_label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="create_tag_modal_label">Create new tag</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+          <div class="form-group">
+            <label for="tag-name" class="col-form-label">Tag:</label>
+            <input type="text" class="form-control" id="tag-name">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="create_tag_button">Create tag</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CLEAR SELECTION MODAL -->
+<div class="modal fade" id="clear_selection_modal" tabindex="-1" role="dialog" aria-labelledby="clear_selection_modal_label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="clear_selection_modal_label">Clear selection</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to clear <strong>all</strong> elements in your selection?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Nope, JK</button>
+        <button type="button" class="btn btn-danger" id="clear_selection_button">Yes, clear selection</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OPEN LINK IN NEW WEBSITE MODAL -->
+<div class="modal fade" id="different_website_modal" tabindex="-1" role="dialog" aria-labelledby="different_website_modal_label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="different_website_modal_label">Opening URL on a different domain</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+          <p>You clicked on a link that is hosted on a different domain. This might have privacy implications.</p>
+          <p id="url_container">Sure you want to visit<br /><u>XXXX</u> ?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Nope, JK</button>
+        <button type="button" class="btn btn-danger" id="different_website_modal_button">Yes, go</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOP NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <a class="navbar-brand" href="{% url 'index' %}"><img id="header-img" src="{% static 'img/header.png' %}"></a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNavDropdown">
+    <ul class="nav nav-pills navbar-nav nav-fill">
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'campaigns' %}">Campaigns</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'streamers' %}">Streamers</a>
+      </li>
+        <!--
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'entities' %}">Entities</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'twitter_users' %}">Users</a>
+      </li>
+      -->
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'manage_index' %} ">App Admin</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/admin">Django Admin</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link"  href="https://doc.tafferugli.io">Documentation</a>
+      </li>
+    </ul>
+    <ul class="nav nav-pills navbar-nav nav-fill ml-auto">
+        <li class="nav-item">
+            <span class="navbar-text text-white">
+                {% if user.is_authenticated %}
+                Logged in as <b>{{ request.user.username }}</b>
+                {% else %}
+                <a href="/admin">Log in</a>
+                {% endif %}
+            </span>
+        </li>
+        <p>&nbsp;&nbsp;&nbsp;</p>
+
+         <li class="nav-item">
+            <span class="navbar-text">
+                &#128722; Your Selection:
+            </span>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'view_selection' 'twitter_users' %}">Twitter Users
+                <span class="badge badge-light">{{ request.session.twitter_users | length }}</span> </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'selection_dashboard' 'tweets' %}">Tweets
+                <span class="badge badge-light">{{ request.session.tweets | length }}</span> </a>
+        </li>
+    </ul>
+        <div class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-success" data-toggle="modal" data-target="#clear_selection_modal">Clear selection</button>
+        </div>
+
+  </div>
+</nav>
+
+{% autoescape off %}{% bootstrap_messages %}{% endautoescape %}
+<div id="ajax_messages"></div>
+
+{% block bootstrap4_content %}
+    <div class="container-fluid mt-3">
+        {% block content %}(no content){% endblock %}
+    </div>
+
+
+<!-- Footer -->
+<footer class="page-footer font-small fixed-bottom">
+  <!-- Copyright -->
+  <div class="footer-copyright text-center py-3">
+      <span class="text-uppercase"><a href="https://www.tafferugli.io">Tafferugli</a> v. {{ TAFFERUGLI_VERSION }} </span> &bull;
+      <span style="font-size:16px;position:relative;top:2px;display:inline-block;transform:rotate(180deg);">&copy;</span>
+      sowdust &middot; <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPL 3.0</a>
+  </div>
+  <!-- Copyright -->
+</footer>
+<!-- Footer -->
+
+
+{% endblock %}
+{% csrf_token %}
+<script type="text/javascript">
+// using jQuery
+var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
+
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(HEAD|OPTIONS|TRACE)$/.test(method));
+}
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
+</script>

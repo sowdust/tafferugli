@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+{% load static %}
+
+{% block title %}
+	URL {{ url.expanded_url }}
+{% endblock %}
+
+{% block custom_head %}
+<!-- MDBootstrap Datatables  -->
+<link href="{% static 'mdb/css/addons/datatables.min.css' %}" rel="stylesheet">
+<!-- MDBootstrap Datatables  -->
+<script type="text/javascript" src="{% static 'mdb/js/addons/datatables.min.js' %}"></script>
+<!-- Font Awesome (for arrows) -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css">
+{% endblock %}
+
+
+
+{% block script %}
+table_functions(searching=true,paging=true,pageLength=250);
+
+
+$(document).ready(function(){
+    // hook notes button
+    $("#update_notes").on('click', function(){
+      $.ajax({
+          url: '{% url 'note_add' %}',
+          type : "POST",
+          dataType : 'json',
+          data : {'object_type':'url', 'object_id' : '{{ url.id }}', 'content' :  $("#note_content").val() },
+          success : function(response) {
+            process_response(response);
+          },
+          error: process_error_response
+      });
+    });
+});
+
+
+
+{% endblock %}
+
+{% block content %}
+
+
+<div class="row">
+      <div class="col-lg-3 col-md-6 col-sm-12">
+        <div class="card">
+            <div class="card-body">
+
+                <ul class="list-group list-group-flush list-group-max-height">
+                    <li class="list-group-item border-0"><span class="text-muted">Display URL:</span> {{ url.display_url }} </li>
+                    <li class="list-group-item border-0"><span class="text-muted">URL:</span> {{ url.url }} </li>
+                    <li class="list-group-item border-0"><span class="text-muted">Expanded URL:</span> {{ url.expanded_url }} </li>
+                    <li class="list-group-item border-0"><span class="text-muted">Hostname:</span> <a href="{% url 'domain' url.hostname %}">{{ url.hostname }}</a> </li>
+
+
+                    <li class="list-group-item border-0"><span class="text-muted"># Users:</span> {{ twitter_users.count }} </li>
+                    <li class="list-group-item border-0"><span class="text-muted"># Tweets:</span>  {{ tweets|length }} </li>
+                    {% for e in url.triggering_entity.all %}
+                    <li class="list-group-item border-0"><span class="text-muted">Entity:</span> <a href="{{ e.get_absolute_url }}">{{ e.name }}</a> </li>
+                    {% endfor %}
+                    {% for c in url.triggering_campaigns.all %}
+                    <li class="list-group-item border-0"><span class="text-muted">Campaign:</span> <a href="{{ c.get_absolute_url }}">{{ c.name }}</a> </li>
+                    {% endfor %}
+                </ul>
+
+            </div>
+        </div>
+      </div>
+
+    <div class="col-lg-3 col-md-4 col-sm-12">
+        <div class="card">
+            <div class="card-body">
+
+              <a href="#users_section" class="btn btn-outline-success btn-block">Go to Users</a>
+              <a href="#tweets_section" class="btn btn-outline-success btn-block">Go to Tweets</a>
+
+            </div>
+                  <div>
+        <h4>Notes</h4>
+        <div class="form-group">
+        <textarea name="notes" id="note_content" width="100%"  class="form-control" style="min-width: 100%">{{ url.notes }}</textarea>
+          </div>
+        <div class="form-group">
+        <button type="button" class="btn btn-outline-info btn-block" id="update_notes">Update notes</button>
+        </div>
+      </div>
+
+        </div>
+      </div>
+
+
+    <div class="col-lg-3 col-md-4 col-sm-12">
+        {% if urls.exists %}
+
+        <div class="card">
+            <div class="card-body">
+                <ul class="list-group list-group-flush list-group-max-height">
+                {% for u in urls.all %}
+                    <li class="list-group-item border-0"><a href="{{ u.get_absolute_url }}">{{ u.display_url }}</a></li>
+                {% endfor %}
+                </ul>
+
+            </div>
+        </div>
+        {% endif %}
+      </div>
+</div>
+{% if twitter_users.exists %}
+<p></p>
+<h2 class="h2"><a name="users_section">Users</a></h2>
+{% if campaign.slug %}
+{% bootstrap_button "Add selected to your selection" button_type="submit" button_class="btn-success" name="add_selection" size="sm" %}
+
+  <form id="users_form">
+    <input type="hidden" name="campaign" value="{{ campaign.slug }}">
+    <input type="hidden" name="selection_target" value="twitter_users">
+    <input type="hidden" name="selection_method" value="specified">
+
+{{ twitter_users | twitter_users_table:True }}
+  </form>
+{% else %}
+
+{{ twitter_users | twitter_users_table:False }}
+
+{% endif %}
+{% endif %}
+
+
+
+
+
+{% if tweets %}
+<p></p>
+<h2><a name="tweets_section">Tweets</a></h2>
+{% if campaign.slug %}
+{% bootstrap_button "Add selected to your selection" button_type="submit" button_class="btn-success" name="add_selection" size="sm" %}
+
+  <form id="tweets_form">
+    <input type="hidden" name="campaign" value="{{ campaign.slug }}">
+    <input type="hidden" name="selection_target" value="tweets">
+    <input type="hidden" name="selection_method" value="specified">
+
+{{ tweets | tweets_table:True }}
+  </form>
+{% else %}
+
+{{ tweets | tweets_table:False }}
+
+{% endif %}
+{% endif %}
+
+{% endblock %}
+
+

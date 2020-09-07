@@ -1,0 +1,28 @@
+<div class="form-group">
+  <input type="text" name="metric_name" class="form-control" placeholder="Name" aria-label="Name">
+</div>
+<div class="form-group">
+  <label for="metric_regex">Regular expression. The default regular expression matches al users with a screen name made by a variable number of letters and 8 final digits</label>
+  <div class="input-group mb-3">
+  <input type="text" name="metric_regex" id="metric_regex" class="form-control" placeholder="Regex" aria-label="Regex" value="r'([A-Za-z]+[A-Za-z0-9-_]+[0-9]{8})'">
+  <div class="input-group-append">
+    <button class="btn btn-outline-success" type="button" id="validate_regex">Validate</button>
+  </div>
+</div>
+</div>
+<div class="form-group">
+  <textarea class="form-control" name="metric_description" placeholder="Description"></textarea>
+</div>
+<script>
+	$("#validate_regex").click(function(e){
+	e.preventDefault()
+	  $.ajax({
+		  url: '{% url 'validate_regex' %}',
+		  type : "POST",
+		  dataType : 'json',
+		  data : {'metric_regex' : $('#metric_regex').val()},
+		  success : process_response,
+		  error: process_error_response
+	  })
+	});
+</script>

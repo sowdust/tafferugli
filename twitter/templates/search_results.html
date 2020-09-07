@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+{% load static %}
+
+{% block title %}
+	Search
+{% endblock %}
+
+
+{% block custom_head %}
+<!-- MDBootstrap Datatables  -->
+<link href="{% static 'mdb/css/addons/datatables.min.css' %}" rel="stylesheet">
+<!-- MDBootstrap Datatables  -->
+<script type="text/javascript" src="{% static 'mdb/js/addons/datatables.min.js' %}"></script>
+<!-- Font Awesome (for arrows) -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css">
+{% endblock %}
+
+
+{% block script %}
+table_functions(searching=true,paging=true,pageLength=250);
+{% endblock %}
+
+
+{% block content %}
+
+
+<div class="row">
+<div class="col">
+  {% if tweets.count %}
+  <p>Found {{ tweets.count }} tweets for selected criteria.</p>
+{% elif twitter_users.count %}
+  <p>Found {{ twitter_users.count }} users for selected criteria.</p>
+{% else %}
+  <p>No results found for selected criteria.</p>
+
+  {% endif %}
+</div>
+</div>
+
+
+{% if twitter_users.exists %}
+{% bootstrap_button "Add checked to your selection" button_type="submit" button_class="btn-success" name="add_selected_users" size="sm" %}
+
+  <form id="users_form">
+    <input type="hidden" name="campaign" value="{{ campaign.id }}">
+    <input type="hidden" name="selection_target" value="twitter_users">
+    <input type="hidden" name="selection_method" value="specified">
+
+
+{{ twitter_users | twitter_users_table:True }}
+  </form>
+{% elif tweets.exists %}
+
+{% bootstrap_button "Add checked to your selection" button_type="submit" button_class="btn-success" name="add_selected_tweets" size="sm" %}
+
+  <form id="tweets_form">
+    <input type="hidden" name="campaign" value="{{ campaign.id }}">
+    <input type="hidden" name="selection_target" value="tweets">
+    <input type="hidden" name="selection_method" value="specified">
+
+
+{{ tweets | tweets_table:True }}
+
+  </form>
+{% endif %}
+
+
+
+
+
+
+{% endblock %}

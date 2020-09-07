@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+{% load static %}
+
+{% block title %}
+	Compute metric 
+{% endblock %}
+
+
+{% block custom_head %}
+<!-- MDBootstrap Datatables  -->
+<link href="{% static 'mdb/css/addons/datatables.min.css' %}" rel="stylesheet">
+<!-- MDBootstrap Datatables  -->
+<script type="text/javascript" src="{% static 'mdb/js/addons/datatables.min.js' %}"></script>
+<!-- Font Awesome (for arrows) -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css">
+{% endblock %}
+
+
+{% block script %}
+
+table_functions(searching=true,paging=true,pageLength=250);
+$(document).ready(function(){
+	/* COMPUTE SELECTED METRIC FOR USERS  */
+	$("[name='start']").click(function(e){
+	e.preventDefault()
+	  $.ajax({
+		  url: '{% url 'metric_compute' %}',
+		  type : "POST",
+		  dataType : 'json',
+		  data : $("#metric_target_form").serialize(),
+		  success : process_response,
+		  error: process_error_response
+	  })
+	});
+
+
+	$('#metric').on('change',function() {
+		$.ajax({
+			  url: '{% url 'ajax_metric_form' %}',
+			  type : "POST",
+			  dataType : 'json',
+			  data : {'metric' : $(this).val()},
+			  success : process_form_template,
+			  error: process_error_response
+		  })
+	});
+
+});
+
+
+
+var process_form_template = function(result) {
+    $('#form_template').html(result['form_template']);
+}
+
+
+{% endblock %}
+
+
+
+{% block content %}
+
+
+<div class="row">
+	<div class="col">
+		{% if twitter_users.exists %}
+		<p>You have a total of {{ twitter_users | length }} users</p>
+		{% endif %}
+		{% if tweets.exists %}
+		<p>You have a total of {{ tweets | length }} tweets</p>
+		{% endif %}
+	</div>
+</div>
+
+<form name="metrics" method="post" id="metric_target_form">
+{% csrf_token %}
+<input type="hidden" name="target" value="selection">
+<input type="hidden" name="campaign" value="{{ campaign }}">
+
+<div class="row">
+	<div class="col-lg-6 col-md-12">
+		<div class="form-group">
+			<select name="metric" id="metric">
+				<option value="" selected disabled> ... </option>
+			{% for m in metrics %}
+				<option value="{{m.name}}">{{m.name}}: {{m.description}}</option>
+			{% endfor %}
+			</select>
+	</div>
+		<div id="form_template"></div>
+			{% bootstrap_button "Start computation" button_type="submit" button_class="btn-success" name="start" size="sm" %}
+			<!--{% bootstrap_button "Recreate network" button_type="submit" button_class="btn-info" name="create-network" size="sm" %}-->
+		</div>
+</div>
+
+{% if twitter_users.exists %}
+{{ twitter_users | twitter_users_table:True }}
+{% endif %}
+
+
+{% if tweets.exists %}
+{{ tweets | tweets_table }}
+{% endif %}
+
+
+</form>
+
+
+{% endblock %}

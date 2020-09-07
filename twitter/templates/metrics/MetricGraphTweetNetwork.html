@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+
+{% block title %}
+	Metric {{ metric.name }} for campaign {{ metric.campaign.name }}
+{% endblock %}
+
+
+{% block script %}
+table_functions(searching=true,paging=true);
+
+$("#graph_image").ready(function(){
+	/* COMPUTE SELECTED METRIC FOR USERS  */
+	$("#spinner").hide();
+});
+{% endblock %}
+
+
+{% block content %}
+
+
+<div class="row mt-10">
+	<div class="col-lg-3 col-md-2 col-sm-12">
+		<div class="card">
+			<div class="card-header">
+				{{ metric.name }}
+			</div>
+			<div class="card-body">
+                <p>{{ metric.description }}</p>
+				<ul class="list-group list-group-flush">
+                    <li class="list-group-item"><span class="text-muted">Related campaign:</span>
+                        <a href="{{ metric.campaign.get_absolute_url }}">{{ metric.campaign.name }}</a></li>
+				  <li class="list-group-item"><span class="text-muted">Started at:</span> {{ metric.computation_start }}</li>
+				  <li class="list-group-item"><span class="text-muted">Finished at:</span> {{ metric.computation_end }}</li>
+				  <li class="list-group-item"><span class="text-muted"><abbr title="Was the metric run on all elements of the campaign (at the time of computation) or only on a subset?">Target extension</abbr>:</span>
+                      {% if metric.campaign_wide %} campaign wide {% else %} selected elements {% endif %} </li>
+					<li class="list-group-item"><span class="text-muted"><abbr title="In the interactive graph, only users with a degree (# of connections) greater than this value are shown">Min degree in graph:</abbr></span> {{ metric.min_degree }}</li>
+                  {% if metric.twitter_users.exists %}
+				    <li class="list-group-item"><span class="text-muted"># Users analyzed:</span> {{ metric.twitter_users.count}}</li>
+                  {% endif %}
+                  {% if metric.tweets.exists %}
+				    <li class="list-group-item"><span class="text-muted"># Tweets analyzed:</span> {{ metric.tweets.count}}</li>
+                  {% endif %}
+                  {% if metric.tagged_users.exists %}
+				    <li class="list-group-item"><span class="text-muted"># Tagged Users:</span> {{ metric.tagged_users.count}}</li>
+                  {% endif %}
+                  {% if metric.tagged_tweets.exists %}
+				    <li class="list-group-item"><span class="text-muted"># Tagged Tweets:</span> {{ metric.tagged_tweets.count}}</li>
+                  {% endif %}
+				  <li class="list-group-item"><span class="text-muted"># Identified Communities:</span> {{ metric.communities.count }}</li>
+
+
+				</ul>
+			</div>
+		</div>
+
+
+	</div>
+	<div class="col-lg-9 col-md-10 col-sm-12">
+		<div class="card">
+			<div class="card-header">
+				Interactions Graph
+			</div>
+			<div class="card-body">
+				{% for t in metric.graphs.all %}
+				<div class="container" style="position:relative;width:100%;height:100%">
+						<div id="graph-buttons" style="position:absolute;z-index:100; margin-right:0;margin-top:0;width:100%;text-align:right">
+							<div class="btn-group-vertical">
+							<a href="{{ t.get_svg }}" class="btn btn-outline-success btn-block" target="_blank" role="button">Open image in new tab</a>
+							<a href="{{ t.get_absolute_url }}" class="btn btn-outline-success btn-block" target="_blank">Open interactive graph in new tab</a>
+							<a href="{{ tweet_graph_metric.get_absolute_url }}" class="btn btn-outline-success btn-block">Go to metric page</a>
+							</div>
+						</div>
+					<div class="container" style="width:65%;height:100%">
+						<div class="d-flex justify-content-center" id="loading">
+						  <div class="spinner-border" role="status" id="spinner">
+							<span class="sr-only">Loading...</span>
+						  </div>
+						</div>
+					<img id="graph_image" src="{{ t.get_svg }}" alt="Interactions graph created on {{ tweet_graph_metric.computation_end }}" class="img-fluid">
+					</div>
+				</div>
+				{% endfor %}
+			</div>
+		</div>
+
+
+	</div>
+</div>
+<div></div>
+
+
+<div class="row">
+		<div class="col-12">
+		<div class="card">
+				<div class="card-header">
+					Computed communities
+				</div>
+				<div class="card-body">
+					<p>The following communities were automatically computed by a <a href="javascript:;" onclick="javascript:link_external_website('https://graph-tool.skewed.de/static/doc/inference.html#graph_tool.inference.minimize.minimize_blockmodel_dl')">"community identification algorithm"</a></p>
+				   <div class="list-group list-group-flush">
+				   {% for community in metric.communities.all %}
+						 <a data-toggle="collapse" href="#community-{{ community.community_id }}"  class="list-group-item list-group-item-action">
+							 {{ community.name }} <span class="badge badge-primary badge-pill">{{community.twitter_users.count}}</span></a>
+						 <div id ="community-{{ community.community_id }}" class="collapse list-group">
+							 {{ community.twitter_users.all|twitter_users_table }}
+						 </div>
+
+				   {% endfor %}
+				</div>
+			</div>
+		</div>
+		</div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}
+	Entities
+{% endblock %}
+
+
+{% block content %}
+
+<ul>
+{% for entity in entities %}
+	<li><a href="{{ entity.get_absolute_url }}">{{ entity.name }}</a></li>
+{% endfor %}
+</ul>
+
+{% endblock %}
+
+

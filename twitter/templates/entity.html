@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+
+
+{% block title %}
+	entity {{ entity.name }}
+{% endblock %}
+
+
+{% block content %}
+
+
+<div class="row">
+	<div class="col">
+		<div class="card">
+			<div class="card-header">
+				Entity {{ entity.name }}
+			</div>
+			<div class="card-body">
+				<span class="text-muted">Entity Type:</span> {{ entity.get_entitytype_display }}<br>
+				<span class="text-muted">Slug:</span> {{ entity.slug }}<br>
+				<span class="text-muted">Content:</span> {{ entity.content }}<br>
+				<span class="text-muted">#Tweets:</span> {{ entity.tweets.count }}<br>
+				<p>{{ entity.description }}</p>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+
+{{ page_obj | tweets_table:entity.content }}
+
+{% bootstrap_pagination page_obj %}
+
+
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+{% load static %}
+
+{% block custom_head %}
+<!-- MDBootstrap Datatables  -->
+<link href="{% static 'mdb/css/addons/datatables.min.css' %}" rel="stylesheet">
+<!-- MDBootstrap Datatables  -->
+<script type="text/javascript" src="{% static 'mdb/js/addons/datatables.min.js' %}"></script>
+<!-- Font Awesome (for arrows) -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css">
+<!-- tag sripts -->
+<script type="text/javascript" src="{% static 'js/tokeninput.js' %}"></script>
+<link href="{% static 'css/token-input.css' %}" type="text/css" media="all" rel="stylesheet" />
+{% endblock %}
+
+{% block title %}
+	Source {{ source.name }}
+{% endblock %}
+
+
+
+
+{% block script %}
+table_functions(searching=true,paging=true,pageLength=250);
+
+/* manage tags */
+var url_tag_add = "{% url 'tag_add'  %}";
+var url_tag_list = "{% url 'tag_list' %}";
+var url_tag_remove = "{% url 'tag_remove'  %}";
+var object_type = "source";
+var object_id = "{{ source.id }}";
+var pre_populated_tags = [{% for tag in source.tags.all %}
+                {id: {{ tag.id }}, name: "{{ tag.name }}"},
+                {% endfor %}];
+prepare_tags(url_tag_add,url_tag_list,url_tag_remove,object_type,object_id,pre_populated_tags);
+
+$(document).ready(function(){
+    // hook notes button
+    $("#update_notes").on('click', function(){
+      $.ajax({
+          url: '{% url 'note_add' %}',
+          type : "POST",
+          dataType : 'json',
+          data : {'object_type':'source', 'object_id' : '{{ source.id }}', 'content' :  $("#note_content").val() },
+          success : function(response) {
+            process_response(response);
+          },
+          error: process_error_response
+      });
+    });
+});
+
+
+
+{% endblock %}
+
+{% block content %}
+
+
+<div class="row">
+	<div class="col-md-3 col-sm-6">
+		<div class="card">
+			<div class="card-header">
+				Source {{ source.name }}
+			</div>
+			<div class="card-body">
+				<span class="text-muted">Slug:</span> {{ source.slug }}<br>
+                <span class="text-muted">Url:</span> <a href="javascript:;" onclick="javascript:link_external_website('{{source.url}}')">{{ source.url }}</a><br>
+				<span class="text-muted">#Tweets:</span> {{ page_obj.count }}<br>
+			</div>
+		</div>
+	</div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card">
+            <div class="card-header">Tags</div>
+            <div class="card-body">
+                <input type="text" id="tags-input" name="blah" />
+                <ul>
+                    {% for tag in user.tags.all %}
+                    <li><a href="{% url 'view-tag' tag.id %}">{{ tag.name }}</a></li>
+                    {% endfor %}
+                </ul>
+                <div id="create_tag_message"></div>
+            </div>
+      <div>
+        <h4>Notes</h4>
+        <div class="form-group">
+        <textarea name="notes" id="note_content" width="100%"  class="form-control" style="min-width: 100%">{{ source.notes }}</textarea>
+          </div>
+        <div class="form-group">
+        <button type="button" class="btn btn-outline-info btn-block" id="update_notes">Update notes</button>
+        </div>
+      </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+{{ page_obj | tweets_table:True }}
+
+
+{% endblock %}

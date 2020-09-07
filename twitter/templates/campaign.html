@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+{% load cache %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+
+{% block tag_title %}
+Campaign {{ campaign.name }}
+{% endblock %}
+
+
+{% block custom_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js" integrity="sha256-TQq84xX6vkwR0Qs1qH5ADkP+MvH0W+9E7TdHJsoIQiM=" crossorigin="anonymous"></script>
+<!-- load d3 -->
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<!-- Load d3-cloud -->
+<script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3.layout.cloud.js"></script>
+<!-- Load d3-legend -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.min.js"></script>
+
+<style type="text/css">
+	.list-group{
+		max-height: 600px;
+		margin-bottom: 10px;
+		overflow-y:auto;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	.legendOrdinal text.label {
+   		fill: '#fff'
+	}
+
+	.bg-darker {
+		border: 1px solid black;
+		background-color: #444;
+		margin: 4px;
+	}
+
+	.overflow-list {
+		font-size: 14px;
+		height: 300px;
+		overflow-y:auto;
+	}
+
+	#graph_image {
+		max-width: 600px;
+		max-height: 400px;
+	}
+
+
+</style>
+{% endblock %}
+
+
+{% block script %}
+$(document).ready(function(){
+	/* COMPUTE SELECTED METRIC FOR USERS  */
+	$("[name='compute']").click(function(e){
+	e.preventDefault()
+	  $.ajax({
+		  url: '{% url 'metric_compute' %}',
+		  type : "POST",
+		  dataType : 'json',
+		  data : $("#compute_metric_form").serialize(),
+		  success : process_response,
+		  error: process_error_response
+	  })
+	});
+
+});
+
+
+{% endblock %}
+
+
+
+{% block content %}
+
+
+
+<!-- SECOND ROW -->
+<div class="row">
+	<nav class="col-sm-3 bg-black">
+
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-uppercase text-muted" >
+        	<span>Summary</span>
+        </h6>
+        <ul class="flex-column nav">
+			<li class="nav-item"><span class="nav-link"><span class="text-muted">Name:</span> {{ campaign.name }}</span></li>
+			<li class="nav-item"><span class="nav-link"><span class="text-muted">Active:</span> {{ campaign.active }}</span></li>
+			<li class="nav-item"><span class="nav-link"><span class="text-muted">Started:</span> {{ campaign.start_date }}</span></li>
+			<li class="nav-item"><span class="nav-link"><span class="text-muted">#tweets:</span> {{ campaign.id | counter_update:"tweet,campaign"}} tweets</span></li>
+			<li class="nav-item"><span class="nav-link"><span class="text-muted">#users:</span> {{ campaign.id | counter_update:"twitter_user,campaign"}}</span></li>
+			<li class="nav-item"><span class="nav-link">{{ campaign.description }}</span></li>
+		</ul>
+	
+
+
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-uppercase text-muted" >
+        	<span>Monitored Entities</span>
+        </h6>
+        <ul class="flex-column nav">
+		{% for entity in campaign.entities.all %}
+			<li class="nav-item">
+				<a  class="nav-link active" href="{{ entity.get_absolute_url }}">{{ entity.name }}
+					<span class="badge badge-info">{{ entity.slug | counter_update:"tweet,entity"}}</span>
+				</a> 
+			</li>
+		{% endfor %}
+		</ul>
+
+		<h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-uppercase text-muted" >
+        	<span>Streamers</span>
+        </h6>
+        <ul class="flex-column nav">
+		{% for streamer in campaign.streamers.all %}
+			<li class="nav-item">
+				<a  class="nav-link active" href="{{ streamer.get_absolute_url }}">{{ streamer }}
+
+				</a>
+			</li>
+		{% endfor %}
+		</ul>
+
+
+		<h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-uppercase text-muted" >
+        	<span>Facts</span>
+        </h6>
+        <ul class="flex-column nav">
+		{% for fact in campaign.facts.all %}
+			<li class="nav-item"><span class="nav-link"><span class="text-muted">{{fact.inserted_at|date:'d/M H:i'}}</span> <abbr title="{{fact.description }}">{{ fact.text }}</abbr> </span></li>
+		{% endfor %}
+		</ul>
+
+		<h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-uppercase text-muted" >
+        	<span><abbr title="Twitter data centers computed from tweet ids">Data centers</abbr></span>
+        </h6>
+        <ul class="flex-column nav">
+		{% for d in data_centers.all %}
+			<li class="nav-item"><span class="nav-link">{{ d.fromid_datacentrenum }} <span class="text-muted">[{{d.counter}}]</span></span></li>
+		{% endfor %}
+		</ul>
+
+
+
+
+
+
+		<h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-uppercase text-muted" >
+        	<span>Actions</span>
+        </h6>
+		<p></p>
+		<div class="form-group">
+		<a href="{% url 'search' campaign.slug %}" class="btn btn-outline-success btn-block">Explore tweets and users related to this campaign</a>
+			</div>
+
+		<form id="compute_metric_form" method="post">
+			{% csrf_token %}
+			<input type="hidden" name="target" value="whole_campaign">
+			<input type="hidden" name="campaign" value="{{ campaign.id }}">
+			<div class="form-group">
+			<select name="metric" class="form-control form-control-sm">
+			{% for m in available_metrics %}
+				<option value="{{m.name}}">{{m.name}} {{m.description}}</option>
+			{% endfor %}
+			</select>
+
+			{% bootstrap_button "Compute metric for whole campaign" button_class="btn btn-outline-success btn-block" name="compute" %}
+			</div>
+		</form>
+
+		<div class="container">
+			<h5 class="p-3">Metrics computed so far</h5>
+				{% with metrics=campaign.metrics.all.select_subclasses %}
+						{% for metric in metrics %}
+						{% if metric.computation_end %}
+							<span class="text-muted">{{ metric.computation_end|date:"M d H:m" }}</span> <a href="{{ metric.get_absolute_url }}">{{ metric.name }}</a><br>
+						{% else %}
+							<!--<span class="text-muted">{{ metric.computation_end|date:"M d H:m" }}</span> <a href="{{ metric.get_absolute_url }}">{{ metric.name }}</a><br>-->
+						{% endif %}
+						{% endfor %}
+				{% endwith %}
+		</div>
+
+	</nav>
+
+        <main role="main" class="col-sm-9">
+
+<div class="card">
+	<div class="tab-content card-body" id="myTabContent">
+		<div class="card-body">
+
+			<!-- dashboard distribution  -->
+			<div class="row">
+				<div class="col-lg-4 col-md-12">
+					<div class="container bg-darker">
+						<h5 class="p-3">Daily chart</h5>
+						<canvas class="responsive" id="myChartDaily"></canvas>
+					</div>
+				</div>
+				<div class="col-lg-4 col-md-12">
+					<div class="container bg-darker">
+						<h5 class="p-3">Hourly distribution</h5>
+						<canvas class="responsive" id="myChartHourly"></canvas>
+					</div>
+				</div>
+				<div class="col-lg-4 col-md-12">
+					<div class="container bg-darker">
+						<h5 class="p-3">Day of week distribution</h5>
+						<canvas class="responsive" id="myChartWeekly"></canvas>
+					</div>
+				</div>
+			</div>
+
+			<!-- first dashboard row -->
+
+
+
+			<div class="row">
+
+				<div class="col-lg-6 col-md-12">
+					<div class="container bg-darker">
+						<h5 class="p-3">Interactions graph</h5>
+						{% if tweet_graph_metric %}
+						{% if tweet_graph_metric.computation_end %}
+						{% for t in tweet_graph_metric.graphs.all %}
+						<div class="container" style="position:relative;width:100%;height:100%">
+								<div id="graph-buttons" style="position:absolute;z-index:100; padding-right:20px; margin-bottom:0px;width:100%;text-align:right">
+									<div class="btn-group-vertical">
+									<a href="{{ t.get_svg }}" class="btn btn-outline-success btn-block btn-sm" target="_blank" role="button">Open SVG in new tab</a>
+									<a href="{{ t.get_absolute_url }}" class="btn btn-outline-success btn-block btn-sm" target="_blank">Open interactive graph in new tab</a>
+									<a href="{{ tweet_graph_metric.get_absolute_url }}" class="btn btn-outline-success btn-block btn-sm">Go to metric page</a>
+									</div>
+								</div>
+
+							<img id="graph_image" src="{{ t.get_png }}" alt="Interactions graph created on {{ tweet_graph_metric.computation_end }}" class="img-fluid">
+						</div>
+						{% endfor %}
+						{% else %}
+						<div id="graph-placeholder" style="height:400px">
+							<span class="text-muted">
+								Compute "MetricGraphTweetNetwork" to explore the interactions graph
+							</span>
+						</div>
+						{% endif %}
+						{% endif %}
+					</div>
+				</div>
+
+				{% cache 500 graphs campaign.id %}
+				<div class="col-lg-6 col-md-12">
+					<div class="container bg-darker">
+						<h5 class="p-3">Hashtag cloud</h5>
+						{{ hashtags | wordcloud }}
+					</div>
+				</div>
+				<div class="col-lg-6 col-md-12">
+					<div class="container bg-darker">
+						<h5 class="p-3">Top 20 domains</h5>
+							{{ domains | domains_lollipop }}
+					</div>
+				</div>
+
+				<div class="col-lg-6 col-md-12">
+					<div class="container bg-darker">
+						<h5 class="p-3">Top 15 Sources</h5>
+							{{ sources_counted | sources_pie }}
+					</div>
+				</div>
+				{% endcache %}
+
+			</div>
+
+			<!-- lists row -->
+			<div class="row">
+
+				<div class="col-lg-3 col-md-6 col-sm-12 overflow-auto d-block float-left">
+					<div class="container bg-darker">
+						<h5 class="p-3">Locations</h5>
+						<div class="overflow-list">
+							{% for location in locations %}
+							<span class="text-muted">[{{location.counter}}]</span> <a href="{{ location.get_absolute_url }}">{{ location.name }}</a><br>
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+
+				<div class="col-lg-3 col-md-6 col-sm-12 overflow-auto d-block float-left">
+					<div class="container bg-darker">
+						<h5 class="p-3">Hashtags</h5>
+						<div class="overflow-list">
+
+							{% for hashtag in hashtags %}
+							<span class="text-muted">[{{hashtag.counter}}]</span> <a href="{{ hashtag.get_absolute_url }}">{{ hashtag.text }}</a><br>
+							{% endfor %}
+						</div>
+
+					</div>
+				</div>
+
+				<div class="col-lg-3 col-md-6 col-sm-12 overflow-auto d-block float-left">
+					<div class="container bg-darker">
+						<h5 class="p-3">Sources</h5>
+						<div class="overflow-list">
+							{% for source in sources %}
+							<span class="text-muted">[{{source.counter}}]</span> <a href="{% url 'source' source.slug %}">{{ source.name }}</a><br>
+							{% endfor %}
+						</div>
+
+					</div>
+				</div>
+
+				<div class="col-lg-3 col-md-6 col-sm-12 overflow-auto d-block float-left">
+					<div class="container bg-darker">
+						<h5 class="p-3">URLs</h5>
+						<div class="overflow-list">
+							{% for url in urls %}
+								<span class="text-muted">[{{url.counter}}]</span> <a href="{% url 'domain' url.hostname %}" title="{{ url.expanded_url }}">{{ url.expanded_url|truncatechars:32 }}</a><br>
+							{% endfor %}
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</main>
+</div>
+
+<!-- distribution_metric {{ distribution_metric }} -->
+{% for d in distribution_metric.labeled_distributions.all %}
+	{{ d | distribution_chart }}
+{% endfor %}
+
+{% for d in distribution_metric.dated_distributions.all %}
+	{{ d | distribution_chart }}
+{% endfor %}
+
+{% endblock %}
+
+

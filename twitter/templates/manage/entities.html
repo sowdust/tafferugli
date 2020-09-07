@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+{% load static %}
+
+{% block title %}
+	Manage campaign
+{% endblock %}
+
+
+
+{% block script %}
+
+table_functions(searching=true,paging=true,pageLength=250);
+$(document).ready(function(){
+	/* COMPUTE SELECTED METRIC FOR USERS  */
+	$("[name='start']").click(function(e){
+	e.preventDefault()
+	  $.ajax({
+		  url: '{% url 'metric_compute' %}',
+		  type : "POST",
+		  dataType : 'json',
+		  data : $("#metric_target_form").serialize(),
+		  success : process_response,
+		  error: process_error_response
+	  })
+	});
+
+
+	$('#metric').on('change',function() {
+		$.ajax({
+			  url: '{% url 'ajax_metric_form' %}',
+			  type : "POST",
+			  dataType : 'json',
+			  data : {'metric' : $(this).val()},
+			  success : process_form_template,
+			  error: process_error_response
+		  })
+	});
+
+});
+
+var process_form_template = function(result) {
+    $('#form_template').html(result['form_template']);
+}
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="row">
+	{% include 'manage/menu.html' %}
+
+	<div class="col-lg-6 col-md-9 col-sm-12">
+		<p>
+			<a href="#bottom">Scroll to the bottom of the page to create a new entity</a>
+		</p>
+		<form method="post" action="">
+			{{ formset.management_form }}
+			{% csrf_token %}
+			{% for form in formset %}
+				{% for field in form %}
+					<div class="form-group">
+						{% bootstrap_field field %}
+						{% if field.help_text %}
+						{% endif %}
+					</div>
+				{% endfor %}
+			<hr />
+			{% endfor %}
+			<input type="submit" class="btn btn-success" value="Confim">
+		</form>
+	</div>
+
+</div>
+<a name="bottom"></a>
+
+{% endblock %}

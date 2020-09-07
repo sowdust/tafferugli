@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+{% load static %}
+
+{% block custom_head %}
+<!-- tag sripts -->
+<script type="text/javascript" src="{% static 'js/tokeninput.js' %}"></script>
+<link href="{% static 'css/token-input.css' %}" type="text/css" media="all" rel="stylesheet" />
+{% endblock %}
+
+
+
+{% block title %}
+	Tweet {{ tweet.id_str }}
+{% endblock %}
+
+
+{% block script %}
+
+/* manage tags */
+var url_tag_add = "{% url 'tag_add'  %}";
+var url_tag_list = "{% url 'tag_list' %}";
+var url_tag_remove = "{% url 'tag_remove'  %}";
+var object_type = "tweet";
+var object_id = "{{ tweet.id_str }}";
+var pre_populated_tags = [{% for tag in tweet.tags.all %}
+                {id: {{ tag.id }}, name: "{{ tag.name }}"},
+                {% endfor %}];
+prepare_tags(url_tag_add,url_tag_list,url_tag_remove,object_type,object_id,pre_populated_tags);
+
+$(document).ready(function(){
+    // hook notes button
+    $("#update_notes").on('click', function(){
+      $.ajax({
+          url: '{% url 'note_add' %}',
+          type : "POST",
+          dataType : 'json',
+          data : {'object_type':'tweet', 'object_id' : '{{ tweet.id_int }}', 'content' :  $("#note_content").val() },
+          success : function(response) {
+            process_response(response);
+          },
+          error: process_error_response
+      });
+    });
+});
+
+
+
+{% endblock %}
+{% block content %}
+
+
+<div class="row">
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        <div class="card">
+            <div class="card-body">
+                <h3>{{tweet.id_str}}</h3>
+                <p></p>
+                <p></p>
+                <blockquote class="blockquote">
+                  <p class="mb-0">{{ tweet.text }}</p>
+                  <footer class="blockquote-footer">@{{ tweet.author.name }}</footer>
+                </blockquote>
+            </div>
+            <a href="javascript:;" onclick="javascript:link_external_website('{{ tweet.get_twitter_url }}')" class="btn btn-outline-success btn-block">See on Twitter</a>
+        </div>
+        <div class="card-body">
+          <h4>Tags</h4>
+          <input type="text" id="tags-input" name="blah" />
+            <ul>
+            {% for tag in user.tags.all %}
+            <li><a href="{% url 'view-tag' tag.id %}">{{ tag.name }}</a></li>
+            {% endfor %}
+            </ul>
+          <div id="create_tag_message"></div>
+        </div>
+      <div>
+        <h4>Notes</h4>
+        <div class="form-group">
+        <textarea name="notes" id="note_content" width="100%"  class="form-control" style="min-width: 100%">{{ tweet.notes }}</textarea>
+          </div>
+        <div class="form-group">
+        <button type="button" class="btn btn-outline-info btn-block" id="update_notes">Update notes</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        <div class="card">
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item border-0"><span class="text-muted">Author:</span> {{ tweet.author.name }}
+                        [<a href="{{ tweet.author.get_absolute_url }}">@{{ tweet.author.screen_name }}</a>]</li>
+                    <li class="list-group-item border-0"><span class="text-muted">Picked up at:</span> {{ tweet.inserted_at }}</li>
+                    <li class="list-group-item border-0"><span class="text-muted">Created at:</span> {{ tweet.created_at }}</li>
+                    <li class="list-group-item border-0"><span class="text-muted">Source:</span> <a href="{{tweet.source.get_absolute_url}}">{{ tweet.source.name }}</a></li>
+                    <li class="list-group-item border-0"><span class="text-muted">Quote count:</span> <abbr title="#Times the tweet was quoted at the 'picked up at time'">{{ tweet.quote_count }}</abbr></li>
+                    <li class="list-group-item border-0"><span class="text-muted">Reply count:</span> <abbr title="#Times the tweet was replied to at the 'picked up at time'">{{ tweet.reply_count }}</abbr></li>
+                    <li class="list-group-item border-0"><span class="text-muted">Retweet count:</span> <abbr title="#Times the tweet was retweeted at the 'picked up at time'">{{ tweet.retweet_count }}</abbr></li>
+                    <li class="list-group-item border-0"><span class="text-muted">Favorite count:</span> <abbr title="#Times the tweet was favorited at the 'picked up at time'">{{ tweet.favorite_count }}</abbr></li>
+                    {% if tweet.location %}
+                    <li class="list-group-item border-0"><span class="text-muted">Location:</span> <a href="{{ tweet.location.get_absolute_url }}">{{ tweet.location }}</a></li>
+                    {% endif %}
+                    {% if tweet.place %}
+                    <li class="list-group-item border-0"><span class="text-muted">Place:</span> <a href="{{ tweet.place.get_absolute_url }}">{{ tweet.coordinates }}</a></li>
+                    {% endif %}
+                    <li class="list-group-item border-0"><span class="text-muted">Language:</span> {{ tweet.lang }}</li>
+                    <li class="list-group-item border-0"><span class="text-muted">TimeStamp:</span> <abbr title="Computed from the id">{{ tweet.fromid_timestamp }}</abbr></li>
+                    <li class="list-group-item border-0"><span class="text-muted">Data Center:</span> <abbr title="Computed from the id">{{ tweet.fromid_datacentrenum }}</abbr></li>
+                    <li class="list-group-item border-0"><span class="text-muted">Server:</span> <abbr title="Computed from the id">{{ tweet.fromid_servernum }}</abbr></li>
+                    <li class="list-group-item border-0"><span class="text-muted">Sequence #:</span> <abbr title="Computed from the id">{{ tweet.fromid_sequencenum }}</abbr></li>
+
+
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-upper">Tagged in metrics</h6>
+                <ul class="list-group list-group-flush">
+                {% for metric in tweet.metrics.all.select_subclasses %}
+                    <li class="list-group-item border-0 border-0"><a href="{{ metric.get_absolute_url }}">{{ metric.name }}</a></li>
+                {% endfor %}
+                </ul>
+                <h6 class="text-upper">Facts</h6>
+                  <ul class="list-group list-group-flush">
+                    {% for fact in tweet.facts.all %}
+                    <li class="list-group-item border-0 border-0"><abbr title="{{ fact.description }}">{{ fact.text }}</abbr></li>
+                    {% endfor %}
+                  </ul>
+                 <h6 class="text-upper">Campaigns</h6>
+                  <ul class="list-group list-group-flush">
+                    {% for campaign in tweet.triggering_campaigns.all %}
+                    <li class="list-group-item border-0 border-0"><a href="{{campaign.get_absolute_url}}">{{ campaign.name }}</a> </li>
+                    {% endfor %}
+                  </ul>
+                <h6 class="text-upper">Entities</h6>
+                  <ul class="list-group list-group-flush">
+                    {% for entity in tweet.triggering_entity.all %}
+                    <li class="list-group-item border-0 border-0"><a href="{{entity.get_absolute_url}}">{{ entity.name }}</a> </li>
+                    {% endfor %}
+                  </ul>
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <div class="col-lg-3 col-md-6 col-sm-12">
+        <div class="card">
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                {% if tweet.in_reply_to_tweet %}
+                <li class="list-group-item border-0"><span class="text-muted">In reply to:</span> <a href="{{ tweet.in_reply_to_tweet.get_absolute_url}}">{{ tweet.in_reply_to_tweet.id_str }}</a>
+                by <a href="{{tweet.in_reply_to_twitteruser.get_absolute_url}}">@{{ tweet.in_reply_to_twitteruser.screen_name }}</a></li>
+                {% endif %}
+                {% if tweet.quoted_status %}
+                <li class="list-group-item border-0"><span class="text-muted">Quoted status:</span> <a href="{{ tweet.quoted_status.get_absolute_url}}">{{ tweet.quoted_status.id_str }}</a></li>
+                {% endif %}
+                {% if tweet.retweeted_status %}
+                <li class="list-group-item border-0"><span class="text-muted">Retweeted status:</span> <a href="{{ tweet.retweeted_status.get_absolute_url}}">{{ tweet.retweeted_status.id_str }}</a>
+                    by <a href="{{tweet.retweeted_status.author.get_absolute_url}}">@{{tweet.retweeted_status.author.screen_name}}</a></li>
+                {% endif %}
+                {% if tweet.twitter_user_mentioned.exists %}
+                    <h6 class="text-upper">Users mentioned</h6>
+                    {% for user in tweet.twitter_user_mentioned.all %}
+                    <li class="list-group-item border-0">{{ user.name}} [<a href="{{user.get_absolute_url}}">@{{ user.screen_name}}</a>]</li>
+                    {% endfor %}
+                {% endif %}
+                </ul>
+                {% if tweet.get_hashtags.exists %}
+                <h6 class="">Hashtags</h6>
+                <ul class="list-group list-group-flush list-group-max-height">
+                  {% for hashtag in tweet.get_hashtags.all %}
+                  <li class="list-group-item border-0 border-0"><a href="{{ hashtag.get_absolute_url }}">{{ hashtag }}</a> </li>
+                {% endfor %}
+                </ul>
+                {% endif %}
+                {% if tweet.get_urls.exists %}
+                <h6 class="text-upper">URLs</h6>
+                <ul class="list-group list-group-flush list-group-max-height">
+                  {% for url in tweet.get_urls.all %}
+                  <li class="list-group-item border-0 border-0"><a href="{{ url.get_absolute_url }}">{{ url.expanded_url }} </a> </li>
+                {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+
+
+
+
+    </div>
+
+
+
+</div>
+
+
+{% endblock %}
+
+
+<!--
+
+
+    twitter_user_mentioned = models.ManyToManyField('TwitterUser',blank=True)
+    url = models.ManyToManyField('URL',blank=True, related_name='tweets')
+    hashtag = models.ManyToManyField('Hashtag',blank=True, related_name='tweets')
+
+    triggering_entity = models.ManyToManyField('Entity',blank=True) # TODO remove
+    triggering_campaigns = models.ManyToManyField('Campaign',blank=True) # TODO remove
+    #tag = models.ForeignKey('Tag',blank=True,on_delete=models.CASCADE)
+
+-->

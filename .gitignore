@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.log
+settings-prod.py
+wsgi-prod.py
+db.sqlite3
+db.sqlite3-journal
+env/
+migrations/
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+Gemfile.lock

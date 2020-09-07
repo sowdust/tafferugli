@@ -1,0 +1,147 @@
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+<!-- Create a div where the graph will take place -->
+<div id="my_dataviz"></div>
+
+<p>
+  <label># bins</label>
+  <input type="number" min="1" max="100" step="30" value="20" id="nBin">
+</p>
+
+<script>
+
+// set the dimensions and margins of the graph
+var margin = {top: 10, right: 30, bottom: 30, left: 40},
+    width = 460 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var svg = d3.select("#my_dataviz")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+// get the data
+d3.csv("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/1_OneNum.csv", function(data) {
+
+
+
+    dates = [];
+    dates.push({'date': new Date('2020-07-01'), 'id_str' : 1})
+    dates.push({'date': new Date('2020-07-01'), 'id_str' : 12})
+    dates.push({'date': new Date('2020-07-02'), 'id_str' : 13})
+    dates.push({'date': new Date('2020-07-03'), 'id_str' : 14})
+    dates.push({'date': new Date('2020-07-05'), 'id_str' : 15})
+    dates.push({'date': new Date('2020-07-05'), 'id_str' : 16})
+    dates.push({'date': new Date('2020-07-05'), 'id_str' : 17})
+    dates.push({'date': new Date('2020-07-05'), 'id_str' : 18})
+    dates.push({'date': new Date('2020-07-07'), 'id_str' : 19})
+    dates.push({'date': new Date('2020-07-08'), 'id_str' : 10})
+    dates.push({'date': new Date('2020-07-08'), 'id_str' : 11})
+    dates.push({'date': new Date('2020-07-09'), 'id_str' : 12})
+    dates.push({'date': new Date('2020-07-09'), 'id_str' : 13})
+    dates.push({'date': new Date('2020-07-09'), 'id_str' : 14})
+    dates.push({'date': new Date('2020-07-09'), 'id_str' : 15})
+    dates.push({'date': new Date('2020-07-09'), 'id_str' : 16})
+    dates.push({'date': new Date('2020-07-09'), 'id_str' : 17})
+    dates.push({'date': new Date('2020-07-09'), 'id_str' : 18})
+    dates.push({'date': new Date('2020-07-09'), 'id_str' : 19})
+    dates.push({'date': new Date('2020-07-01'), 'id_str' : 20})
+
+
+    console.log(dates);
+
+
+
+
+  var first_date = d3.min(dates, function(d) { return d.date });;
+  var last_date = d3.max(dates, function(d) { return d.date });
+  var diff_days = Math.ceil((last_date-first_date) / (1000 * 60 * 60 * 24));
+  var date_format = d3.timeFormat("%d/%m/%y");
+
+  console.log(first_date);
+  console.log(last_date);
+  console.log(diff_days);
+
+  var x = d3.scaleTime()
+      .domain([first_date, last_date])
+      .range([0, width]);
+
+  svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x));
+
+  var y = d3.scaleLinear()
+      .range([height, 0]);
+  var yAxis = svg.append("g")
+
+  function update(nBin) {
+
+    nBin = d3.min([nBin,diff_days]);
+
+    // set the parameters for the histogram
+    var histogram = d3.histogram()
+        .value(function(d) { return d.date; })
+        .domain(x.domain())
+        .thresholds(x.ticks(nBin));
+
+    // And apply this function to data to get the bins
+    var bins = histogram(dates);
+
+    // Y axis: update now that we know the domain
+    y.domain([0, d3.max(bins, function(d) { return d.length; })]);   // d3.hist has to be called before the Y axis obviously
+    yAxis
+        .transition()
+        .duration(1000)
+        .call(d3.axisLeft(y));
+
+    // Join the rect with the bins data
+    var u = svg.selectAll("rect")
+        .data(bins)
+
+    // Manage the existing bars and eventually the new ones:
+    u
+        .enter()
+        .append("rect") // Add a new rect for each new elements
+        .on('click',function(d) { console.log(d) })
+        .on('mouseover',function() {  })
+
+        .merge(u) // get the already existing elements as well
+        .transition() // and apply changes to all of them
+        .duration(1000)
+          .attr("x", 1)
+          .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
+          .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
+          .attr("height", function(d) { return height - y(d.length); })
+          .style("fill", "#69b3a2")
+
+
+    // If less bar in the new histogram, I delete the ones not in use anymore
+    u
+        .exit()
+        .remove()
+
+    }
+
+
+  // Initialize with diff_days bins
+  update(diff_days)
+
+
+  // Listen to the button -> update if user change it
+  d3.select("#nBin").on("input", function() {
+    update(+this.value);
+  });
+
+});
+</script>
+
+</body>
+</html>

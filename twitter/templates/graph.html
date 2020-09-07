@@ -1,0 +1,578 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+
+
+{% block custom_head %}
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://d3js.org/d3-collection.v1.min.js"></script>
+    <script src="https://d3js.org/d3-dispatch.v1.min.js"></script>
+    <script src="https://d3js.org/d3-quadtree.v1.min.js"></script>
+    <script src="https://d3js.org/d3-timer.v1.min.js"></script>
+    <script src="https://d3js.org/d3-force.v1.min.js"></script>
+
+	<style>
+		.dark-background {
+			background: black;
+		}
+
+		.light-background {
+			background: white;
+		}
+	</style>
+{% endblock %}
+
+
+{% block title %}
+	Metric {{ metric.name }} for campaign {{ metric.campaign.name }}
+{% endblock %}
+
+{% block script %}
+
+
+var simulation;
+
+$(document).ready(function(){
+
+	// TODO : add max degree in graph attributes
+	// TODO : add weights
+
+	var jsonFile = '{{ graph.get_json }}';
+	var width = window.innerWidth
+	var height = window.innerHeight
+
+	var strength = -30;
+	var theta = 0.4;
+	var distanceMax = width / 15;
+	var distanceMin = 10;
+	var min_size = 1;
+	var max_size = 30;
+	var log_base = 50;
+	var fixed_box = false;
+
+	$('#theta-value').html(theta);
+	$('#distanceMax-value').html(distanceMax);
+	$('#distanceMin-value').html(distanceMin);
+	$('#strength-value').html(strength);
+	$('#theta').val(theta);
+	$('#distanceMax').val(distanceMax);
+	$('#distanceMin').val(distanceMin);
+	$('#strength').val(strength);
+
+	var svg_element = d3.select("#graph-block").append("svg")
+		.attr("viewBox", [0, 0, width, height]);
+
+	// zoom
+	var svg = svg_element.append("g")
+		.attr("class", "everything");
+
+	function getNodeColor(node) {
+	  // return d3.interpolateRainbow(node.group * 1.0  / 10);
+	  // return d3.interpolateSinebow(node.group * 1.0  / 10);
+	  return d3.interpolateTurbo(node.group * 1.0  / 10);
+	}
+
+	function getStrokeColor(node) {
+		return d3.rgb(getNodeColor(node)).brighter();
+	}
+
+	function showDetails(node) {
+		console.log(node);
+	}
+
+	function hideDetails(node) {
+		console.log('hidden');
+	}
+
+	function drag(simulation) {
+
+		function dragstarted(d) {
+			if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+			d.fx = d.x;
+			d.fy = d.y;
+		}
+
+		function dragged(d) {
+			d.fx = d3.event.x;
+			d.fy = d3.event.y;
+		}
+
+		function dragended(d) {
+			if (!d3.event.active) simulation.alphaTarget(0);
+			d.fx = null;
+			d.fy = null;
+		}
+
+		return d3.drag()
+			.on("start", dragstarted)
+			.on("drag", dragged)
+			.on("end", dragended);
+	}
+
+	var rect = svg.append("rect")
+	  .attr("width", width)
+	  .attr("height", height)
+	  .style("fill", "none")
+	  .style("pointer-events", "all");
+
+
+	// add zoom capabilities
+	var zoom_handler = d3.zoom()
+		.on("zoom", zoom_actions);
+
+	zoom_handler(svg_element);
+
+	function zoom_actions(){
+		svg.attr("transform", d3.event.transform)
+	}
+
+	zoom_handler(svg);
+
+	d3.json(jsonFile).then(function(data){
+		nodes = data['nodes'];
+		links = data['links'];
+
+		var max_degree = d3.max(nodes, function(d) { return +d.degree;} )
+
+		var logScale = d3.scaleLog()
+			.base(max_degree)
+			.domain([1, max_degree])
+			.range([min_size, max_size]);
+
+		var weightScale = d3.scaleLinear()
+			.domain(d3.extent(links, function (d) { return d.weight }))
+			.range([1, 10])
+
+		function getNodeSize(node) {
+			return logScale(node.degree);
+		}
+
+		function getLinkStrength(link) {
+			// s =  link.weight / Math.min(count(link.source), count(link.target));
+			s = weightScale(link.weight);
+			return s;
+		}
+
+		simulation = d3.forceSimulation(nodes)
+		  .force("link", d3.forceLink(links)
+								.id(d => d.id)
+								//.strength(d => getLinkStrength(d))
+								)
+
+		  //.force("collide", d3.forceCollide()
+		  //                      .radius( d => d.r))
+		  .force("charge", d3.forceManyBody()
+								.strength(strength)
+								.theta(theta)
+								.distanceMax(distanceMax)
+								.distanceMin(distanceMin))
+
+		  .force("center", d3.forceCenter(width / 2, height / 2));
+
+		var link = svg.append("g")
+				.attr("stroke", "#999")
+				.attr("stroke-opacity", 0.6)
+			.selectAll("line")
+			.data(links)
+			.join("line")
+				.attr("stroke-width", d => d.weight);
+
+		var node = svg.append("g")
+				.attr("stroke-width", 1)
+				.attr("class", "nodes")
+			.selectAll("circle")
+			.data(nodes)
+			.join('circle')
+				.attr("r", getNodeSize)
+				.attr("fill", getNodeColor)
+				.call(drag(simulation))
+				.attr("stroke", getStrokeColor);
+
+		node.append('title').
+			text(d => d.screen_name)
+
+		node.on("click", d => show_user_info(d))
+
+		//node.on("click", $('#userInfoModal').modal('show'))
+		//node.on("mouseover", d => showDetails(d))
+		//	.on("mouseout", d => hideDetails(d))
+
+		var textElements = svg.append("g")
+			.attr("class", "texts")
+			.selectAll("text")
+			.data(nodes)
+			.enter().append("text")
+			.text(function (node) {
+					if (node.degree > 15) return  node.screen_name
+					else return '';
+				 })
+				.attr("font-size", 15)
+				.attr("dx", 15)
+			.attr("dy", 4)
+
+
+		compute_position = function(node) {
+
+		}
+
+		simulation.nodes(nodes).on('tick', () => {
+			node
+				.attr('cx', function (node) {
+					if(fixed_box) {
+						return node.x = Math.max(6, Math.min(width - 6, node.x));
+					} else {
+						return node.x;
+					}
+				})
+				.attr('cy', function (node) {
+					if(fixed_box) {
+						return node.y = Math.max(6, Math.min(height - 6, node.y));
+					} else {
+						return node.y;
+					}
+				})
+		   textElements
+				.attr('x', function (node) { return node.x })
+				.attr('y', function (node) { return node.y })
+			link
+				.attr("x1", d => d.source.x)
+				.attr("y1", d => d.source.y)
+				.attr("x2", d => d.target.x)
+				.attr("y2", d => d.target.y);
+		})
+
+
+	});
+});
+
+
+function update_theta(value) {
+	// theta = - value / 10.0;
+	theta = value;
+	simulation.force('charge').theta(theta);
+	simulation.force('charge').initialize(nodes);
+	simulation.alpha(0.5).alphaTarget(0.3).restart();
+	console.log('changed theta value to ' + theta);
+	$('#theta-value').html(theta);
+}
+
+function update_distanceMax(value) {
+	distanceMax = value;
+	simulation.force('charge').distanceMax(distanceMax);
+	simulation.alpha(0.5).alphaTarget(0.3).restart();
+	console.log('changed distanceMax value to ' + distanceMax);
+	$('#distanceMax-value').html(distanceMax);
+}
+
+function update_distanceMin(value) {
+	distanceMin = value;
+	simulation.force('charge').distanceMin(distanceMin);
+	simulation.alpha(0.5).alphaTarget(0.3).restart();
+	console.log('changed distanceMin value to ' + distanceMin);
+	$('#distanceMin-value').html(distanceMin);
+}
+
+function update_strength(value) {
+	// strength = -value;
+	strength = value;
+	simulation.force('charge').strength(d => strength); // * d.weight);
+	simulation.alpha(0.5).alphaTarget(0.3).restart();
+	console.log('changed strength value to ' + strength);
+	$('#strength-value').html(strength);
+}
+
+function change_background(value) {
+	if(value == 'Light background') {
+		console.log('Switching to light background');
+		$('#change-background').val('Dark background');
+		$('#change-background').addClass('btn-dark');
+		$('#change-background').removeClass('btn-light');
+		$('#graph-block').addClass('light-background');
+		$('#graph-block').removeClass('dark-background');
+	} else {
+		console.log('Switching to dark background');
+		$('#change-background').val('Light background');
+		$('#change-background').removeClass('btn-dark');
+		$('#change-background').addClass('btn-light');
+		$('#graph-block').addClass('dark-background');
+		$('#graph-block').removeClass('light-background');
+	}
+}
+
+
+
+	function make_request(node) {
+		clear_modal();
+		data = {
+			'id_str' : node.id_str,
+			'metric' : {{ graph.metric.id }},
+			'block' : node.group
+		};
+		$.ajax({
+			type : 'POST',
+			url :  "{% url 'twitter_user_graph_detail' %}",
+			data : data,
+			success : function(response) {
+				fill_user_info(response)
+			},
+			error : function(response){
+				alert(response)
+			}
+		})
+	}
+
+
+	function show_user_info(d) {
+		$('#userInfoModal').modal('show');
+		$('#user_info_name').html(d.name);
+		$('#user_info_screen_name').html(d.screen_name);
+		$('#user_info_id_str').html(d.id_str);
+		make_request(d);
+	}
+
+	function clear_modal() {
+		$('#modal-errors').html('');
+		$('#facts').html('');
+		$('#entities').html('');
+		$('#users').html('');
+		$('#tags').html('');
+		$('#user_info_name').html('');
+		$('#user_info_screen_name').html('');
+		$('#user_info_id_str').html('');
+		$('#profile-pic').html('');
+		$('#additional').html('');
+		$('#location').html('');
+		$('#followers_count').html('');
+		$('#friends_count').html('');
+		$('#favourites_count').html('');
+		$('#listed_count').html('');
+		$('#created_at').html('');
+		$('#inserted_at').html('');
+		$('#tweets_seen').html('');
+		$('#statuses_count').html('');
+		$('#visit_community').html('');
+		$('#show-profile').prop("onclick", null).off("click");
+		$('#add-to-selection').prop("onclick", null).off("click");
+		$('#show-on-twitter').prop("onclick", null).off("click");
+		$('#show-community').prop("onclick", null).off("click");
+		$('#add-community-selection').prop("onclick", null).off("click");
+		$("#update_user").prop("onclick", null).off("click");
+	}
+
+	function fill_user_info(response) {
+		// manage errors
+		$('#modal-errors').html(response['errors']).show();
+
+		var t = response['twitter_user']['info'];
+		var tags = response['twitter_user']['tags'];
+		var c = response['twitter_user']['communities'];
+		var m = response['twitter_user']['metrics'];
+		var e = response['twitter_user']['entities'];
+		var q = response['twitter_user']['tags'];
+		var f = response['twitter_user']['facts'];
+		var u = response['users'];
+
+		f.forEach(function(item,index){
+			$('#facts').append('<p><abbr title="'+item['description']+'"></abbr>'+item['text']+'</p>')
+		})
+
+		e.forEach(function(item,index){
+			$('#entities').append('<li class="list-group-item py-2 border-0"><a href="/entity/'+item['slug']+'">'+item['name']+'</a></li>')
+		})
+
+
+		$('#users').append('<li class="list-group-item py-2 border-0"><input id="checkall" type="checkbox" checked> Select/Deselect All</li>');
+		$("#checkall").click(function(){
+			$('input:checkbox').not(this).prop('checked', this.checked);
+		});
+		u.forEach(function(item,index){
+			var str = '';
+			str += '<li class="list-group-item py-2 border-0">';
+			str += '<input type="checkbox" name="uid" value="'+item['id_str']+'" checked>';
+			if(item['filled']) {
+				str += ' <a href="javascript:make_request({\'id_str\':\''+item['id_str']+'\',\'metric\':{{ graph.metric.id }},\'group\':'+t['block_id']+'})">';
+				str += item['screen_name']+'</a> ';
+			} else {
+				str += item['id_str'] + ' ';
+			}
+			str += '(<a href="/twitter_user/'+item['id_str']+'">show page</a>)</li>';
+			$('#users').append(str)
+		})
+
+		q.forEach(function(item,index){
+			$('#tags').append('<li class="list-group-item py-2 border-0"><a href="/tag/'+item['id']+'">'+item['name']+'</a></li>')
+		})
+
+		$('#show-profile').click(function() { window.open('/twitter_user/' + t['id_str']) });
+		$('#show-community').click(function() { window.open('/community/'+t['community_id']) });
+		$('#show-on-twitter').click(function() {
+			link_external_website('https://twitter.com/'+t['screen_name'])
+		});
+		$('#add-to-selection').click(function() {
+			$.ajax({
+				url: '{% url 'add_to_selection' %}',
+				type : "POST",
+				dataType : 'json',
+				data : {
+					"campaign" : "{{ graph.metric.campaign.id }}",
+					"selection_target" : "twitter_users",
+					"selection_method" : "specified",
+					"uid" : t['id_str']
+				},
+				success : process_response,
+				error: process_error_response
+			})
+		});
+		$('#add-community-selection').click(function() {
+			$.ajax({
+				url: '{% url 'add_to_selection' %}',
+				type : "POST",
+				dataType : 'json',
+				data : $("#users_form").serialize(),
+				success : process_response,
+				error: process_error_response
+			})
+		});
+		$("#update_user").on('click', function(){
+			$.ajax({
+				url: '/twitter_user/' + t['id_str'] + '/',
+				type : "POST",
+				dataType : 'json',
+				data : {'action':'fetch'},
+				success : function(response){
+					process_response(response);
+					make_request({'id_str':t['id_str'],'metric': {{ graph.metric.id }},'group':t['block_id']});
+				},
+				error: process_error_response
+			});
+		});
+
+		if(t['filled']) {
+			$('#user_info_name').html(t['name'] + ' <span id="user_info_screen_name">&#x40;'+t['screen_name']+'</span>');
+			//$('#user_info_screen_name').html(t['screen_name']);
+			$('#user_info_id_str').html(t['id_str']);
+			$('#profile-pic').html('<img src="' + t['profile_pic_url'] + '" width="100%">');
+			$('#additional').css('display','block')
+			$('#location').html(t['location'])
+			$('#followers_count').html(t['followers_count'])
+			$('#friends_count').html(t['friends_count'])
+			$('#favourites_count').html(t['favourites_count'])
+			$('#listed_count').html(t['listed_count'])
+			$('#created_at').html(t['created_at'])
+			$('#inserted_at').html(t['inserted_at'])
+			$('#tweets_seen').html(t['tweets_seen'])
+			$('#statuses_count').html(t['statuses_count'])
+		}else{
+			$('#user_info_name').html('<span id="user_info_screen_name">Stub user</span>');
+			$('#user_info_id_str').html(t['id_str']);
+		}
+
+	}
+
+
+
+
+
+{% endblock %}
+
+
+{% block content %}
+
+<!-- Modal -->
+<div class="modal" id="userInfoModal" tabindex="-1" role="dialog" aria-labelledby="userInfoModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+    <div class="modal-content">
+		<div class="alert alert-danger d-none" role="alert" id="modal-errors"></div>
+      <div class="modal-header">
+        <h5 class="modal-title" id="user_info_name"></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+		  <div class="row">
+			  <div class="col" id="profile-pic">
+			  </div>
+			  <div class="col">
+				  <div class="profile_obj"><span class="profile_obj_t">ID:</span> <span id="user_info_id_str"></span></div>
+				  <div class="profile_obj"><span class="profile_obj_t">Followers:</span> <span id="followers_count"></span></div>
+				  <div class="profile_obj"><span class="profile_obj_t">Friends:</span> <span id="friends_count"></span></div>
+				  <div class="profile_obj"><span class="profile_obj_t">Favorites:</span> <span id="favourites_count"></span></div>
+				  <div class="profile_obj"><span class="profile_obj_t">Listed:</span> <span id="listed_count"></span></div>
+				  <div class="profile_obj"><span class="profile_obj_t">Created:</span> <span id="created_at"></span></div>
+				  <div class="profile_obj"><span class="profile_obj_t">Statuses:</span> <span id="statuses_count"></span></div>
+				  <div class="profile_obj"><span class="profile_obj_t">First seen:</span> <span id="inserted_at"></span></div>
+				  <div class="profile_obj"><span class="profile_obj_t">Tweets seen:</span> <span id="tweets_seen"></span></div>
+			  </div>
+		  </div>
+		  <div class="row pt-1">
+			  <div class="col"><button class="btn btn-outline-success btn-block" id="show-profile">Show profile</button></div>
+			  <div class="col"><button class="btn btn-outline-success btn-block" id="add-to-selection">Add to selection</button></div>
+			  <div class="col"><button class="btn btn-outline-success btn-block" id="update_user">Update user</button></div>
+			  <!--<div class="col"><button class="btn btn-outline-success btn-block" id="show-on-twitter">Show on Twitter</button></div>-->
+
+		  </div>
+		  <h5 class="pt-2">Facts</h5>
+		  <div class="row"><div class="col" id="facts"></div></div>
+		  <h5>Entities</h5>
+		  <div class="row"><div class="col" id="entities"><ul class="list-group list-group-flush"></ul></div></div>
+		  <h5>Tags</h5>
+		  <div class="row"><div class="col" id="tags"><ul class="list-group list-group-flush"></ul></div></div>
+		  <h5>Users in the same community</h5>
+		  <div class="row">
+			  <div class="col"><button class="btn btn-outline-success btn-block" id="show-community">Show community</button></div>
+			  <div class="col"><button class="btn btn-outline-success btn-block" id="add-community-selection">Add users to selection</button></div>
+		  </div>
+		  <div class="row"><div class="col">
+			<form id="users_form">
+			<input type="hidden" name="campaign" value="{{ graph.metric.campaign.id }}">
+			<input type="hidden" name="selection_target" value="twitter_users">
+			<input type="hidden" name="selection_method" value="specified">
+			  <ul class="list-group list-group-flush" id="users" style="max-height:400px;overflow-y:scroll"></ul>
+			</form>
+		  </div></div>
+
+
+
+
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="graph-header">
+	<div class="row">
+		<div class="col align-middle text-center">
+		<label for="theta">Approximation <span id="theta-value"></span></label>
+		<input type="range" id="theta" class="custom-range" min="0.1" max="2" step="0.1" value="javascript:-theta*10" onchange="update_theta(this.value)">
+		</div>
+		<div class="col align-middle text-center">
+		<label for="distanceMax">Max distance <span id="distanceMax-value"></span></label>
+		<input type="range" id="distanceMax" class="custom-range" min="1" max="javascript:width" step="10" value="javascript:distanceMax" onchange="update_distanceMax(this.value)">
+		</div>
+		<div class="col align-middle text-center">
+		<label for="distanceMin">Min distance <span id="distanceMin-value"></span></label>
+		<input type="range" id="distanceMin" class="custom-range" min="1" max="javascript:width" step="10" value="javascript:distanceMax" onchange="update_distanceMin(this.value)">
+		</div>
+		<div class="col align-middle text-center">
+		<label for="strength">Charge strength <span id="strength-value"></span></label>
+		<input type="range" id="strength" class="custom-range" min="-100" max="10" step="1" value="javascript:strength" onchange="update_strength(this.value)">
+		</div>
+		<div class="col align-middle text-center">
+		<input type="button" class="btn btn-light btn-sm" id="change-background" value="Light background" onclick="change_background(this.value)">
+			<a class="btn btn-info btn-sm" href="{{ graph.get_json }}" download="{{ graph.metric.name | slugify }}.json">Download JSON</a>
+			<a class="btn btn-info btn-sm" href="{{ graph.get_xml }}" download="{{ graph.metric.name | slugify }}.graphml.gzip">Download XML</a>
+
+	</div>
+</div>
+
+<div id="graph-block" class="dark-background">
+</div>
+
+
+{% endblock %}

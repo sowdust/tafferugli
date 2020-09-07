@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+{% load static %}
+
+{% block title %}
+	Manage campaign
+{% endblock %}
+
+
+{% block script %}
+table_functions(searching=true,paging=true,pageLength=250);
+$(document).ready(function(){
+	/* COMPUTE SELECTED METRIC FOR USERS  */
+	$("[name='start']").click(function(e){
+	e.preventDefault()
+	  $.ajax({
+		  url: '{% url 'metric_compute' %}',
+		  type : "POST",
+		  dataType : 'json',
+		  data : $("#metric_target_form").serialize(),
+		  success : process_response,
+		  error: process_error_response
+	  })
+	});
+
+
+	$('#metric').on('change',function() {
+		$.ajax({
+			  url: '{% url 'ajax_metric_form' %}',
+			  type : "POST",
+			  dataType : 'json',
+			  data : {'metric' : $(this).val()},
+			  success : process_form_template,
+			  error: process_error_response
+		  })
+	});
+	$("#delete").on('click', function(){
+			var data = $("#campaign-form").serialize() + '&delete=true';
+			// send ajax
+			$.ajax({
+				url: document.url,
+				type : "POST",
+				dataType : 'json',
+				data : data,
+				success : process_response,
+				error: process_error_response
+			})
+		});
+});
+
+var process_form_template = function(result) {
+    $('#form_template').html(result['form_template']);
+}
+{% endblock %}
+
+
+{% block content %}
+
+<div class="modal" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete Campaign</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this campaign? This can't be undone!</p>
+      </div>
+      <div class="modal-footer">
+        <button id="delete" type="submit" class="btn btn-danger">Yes, delete</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal">No, don't delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+{% include 'manage/menu.html' %}
+	<div class="col-lg-6 col-md-9 col-sm-12">
+		<form method="post" action="" id="campaign-form">
+			{% for field in form %}
+				{% csrf_token %}
+				<div class="form-group">
+					{% bootstrap_field field %}
+					{% if field.help_text %}
+					{% endif %}
+				</div>
+			{% endfor %}
+			<input type="submit" class="btn btn-success" value="Confim">
+			<input type="button" class="btn btn-danger" value="DELETE" data-toggle="modal" data-target="#deleteModal">
+		</form>
+	</div>
+
+</div>
+
+{% endblock %}

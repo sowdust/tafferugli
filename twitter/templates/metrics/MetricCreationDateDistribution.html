@@ -1,0 +1,613 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+{% load static %}
+
+
+{% block title %}
+	Metric {{ metric.name }} for campaign {{ metric.campaign.name }}
+{% endblock %}
+
+
+
+{% block custom_head %}
+<script src="https://d3js.org/d3.v4.js"></script>
+<link id="bsdp-css" href="https://unpkg.com/bootstrap-datepicker@1.9.0/dist/css/bootstrap-datepicker3.min.css" rel="stylesheet">
+<script src="https://unpkg.com/bootstrap-datepicker@1.9.0/dist/js/bootstrap-datepicker.min.js"></script>
+<style>
+	path {
+		stroke: white;
+	}
+	.tick text {
+		font-size: 5px;
+		fill: white;
+	}
+	.tick line {
+		stroke: white;
+	}
+</style>
+{% endblock %}
+
+{% block script %}
+
+	function format_date(date,title=false) {
+		if(title){
+			return d.date.getUTCFullYear() +"/"+ (d.date.getUTCMonth()+1) +"/"+ d.date.getUTCDate();
+		}
+		return date.getUTCFullYear() +"/"+ (date.getUTCMonth()+1) +"/"+ date.getUTCDate();
+	}
+
+
+	function clear_modal(clear_users=true) {
+		if(clear_users) {
+			$('#users').html('');
+			$('#user_info').hide();
+			$('#instructions').show();
+		}
+		$('#modal-errors').html('');
+		$('#facts').html('');
+		$('#entities').html('');
+		$('#tags').html('');
+		$('#user_info_name').html('');
+		$('#user_info_screen_name').html('');
+		$('#user_info_id_str').html('');
+		$('#profile-pic').html('');
+		$('#additional').html('');
+		$('#location').html('');
+		$('#followers_count').html('');
+		$('#friends_count').html('');
+		$('#favourites_count').html('');
+		$('#listed_count').html('');
+		$('#created_at').html('');
+		$('#inserted_at').html('');
+		$('#tweets_seen').html('');
+		$('#statuses_count').html('');
+		$('#visit_community').html('');
+		$('#show-profile').prop("onclick", null).off("click");
+		$('#add-to-selection').prop("onclick", null).off("click");
+		$('#show-on-twitter').prop("onclick", null).off("click");
+		$('#show-community').prop("onclick", null).off("click");
+		$('#add-community-selection').prop("onclick", null).off("click");
+		$("#update_user").prop("onclick", null).off("click");
+	}
+
+
+
+	function fill_user_info(response) {
+		// manage errors
+		$('#user_info').show();
+		$('#instructions').hide();
+		$('#modal-errors').html(response['errors']).show();
+
+		var t = response['twitter_user']['info'];
+		var tags = response['twitter_user']['tags'];
+		var c = response['twitter_user']['communities'];
+		var m = response['twitter_user']['metrics'];
+		var e = response['twitter_user']['entities'];
+		var q = response['twitter_user']['tags'];
+		var f = response['twitter_user']['facts'];
+		var u = response['users'];
+
+		f.forEach(function(item,index){
+			$('#facts').append('<p><abbr title="'+item['description']+'"></abbr>'+item['text']+'</p>')
+		})
+
+		e.forEach(function(item,index){
+			$('#entities').append('<li class="list-group-item py-2 border-0"><a href="/entity/'+item['slug']+'">'+item['name']+'</a></li>')
+		})
+
+
+		q.forEach(function(item,index){
+			$('#tags').append('<li class="list-group-item py-2 border-0"><a href="/tag/'+item['id']+'">'+item['name']+'</a></li>')
+		})
+
+		$('#show-profile').click(function() { window.open('/twitter_user/' + t['id_str']) });
+		$('#show-community').click(function() { window.open('/community/'+t['community_id']) });
+		$('#show-on-twitter').click(function() {
+			link_external_website('https://twitter.com/'+t['screen_name'])
+		});
+		$('#add-to-selection').click(function() {
+			$.ajax({
+				url: '{% url 'add_to_selection' %}',
+				type : "POST",
+				dataType : 'json',
+				data : {
+					"campaign" : "{{ metric.campaign.id }}",
+					"selection_target" : "twitter_users",
+					"selection_method" : "specified",
+					"uid" : t['id_str']
+				},
+				success : process_response,
+				error: process_error_response
+			})
+		});
+		$('#add-community-selection').click(function() {
+			$.ajax({
+				url: '{% url 'add_to_selection' %}',
+				type : "POST",
+				dataType : 'json',
+				data : $("#users_form").serialize(),
+				success : process_response,
+				error: process_error_response
+			})
+		});
+		$("#update_user").on('click', function(){
+			$.ajax({
+				url: '/twitter_user/' + t['id_str'] + '/',
+				type : "POST",
+				dataType : 'json',
+				data : {'action':'fetch'},
+				success : function(response){
+					process_response(response);
+					make_request({'id_str':t['id_str'],'metric': {{ metric.id }},'group':t['block_id']});
+				},
+				error: process_error_response
+			});
+		});
+
+		if(t['filled']) {
+			$('#user_info_name').html(t['name'] + ' <span id="user_info_screen_name">&#x40;'+t['screen_name']+'</span>');
+			//$('#user_info_screen_name').html(t['screen_name']);
+			$('#user_info_id_str').html(t['id_str']);
+			$('#profile-pic').html('<img src="' + t['profile_pic_url'] + '" width="100%">');
+			$('#additional').css('display','block')
+			$('#location').html(t['location'])
+			$('#followers_count').html(t['followers_count'])
+			$('#friends_count').html(t['friends_count'])
+			$('#favourites_count').html(t['favourites_count'])
+			$('#listed_count').html(t['listed_count'])
+			$('#created_at').html(t['created_at'])
+			$('#inserted_at').html(t['inserted_at'])
+			$('#tweets_seen').html(t['tweets_seen'])
+			$('#statuses_count').html(t['statuses_count'])
+		}else{
+			$('#user_info_name').html('<span id="user_info_screen_name">Stub user</span>');
+			$('#user_info_id_str').html(t['id_str']);
+		}
+
+	}
+
+
+
+	function make_request(node) {
+		clear_modal(users=false);
+		data = {
+			'id_str' : node.id_str,
+			'metric' : {{ metric.id }},
+		};
+		$.ajax({
+			type : 'POST',
+			url :  "{% url 'twitter_user_detail' %}",
+			data : data,
+			success : function(response) {
+				fill_user_info(response)
+			},
+			error : function(response){
+				alert(response)
+			}
+		})
+	}
+
+
+
+
+function show_users(data) {
+	clear_modal();
+
+	max_date = d3.max(data,function(d) { return d.date });
+	min_date = d3.min(data,function(d) { return d.date });
+
+	$('#users').append('<p><strong>Date range: ' + format_date(min_date) + ' - ' + format_date(max_date) + '</strong></p>');
+
+	$('#users').append('<li class="list-group-item py-2 border-0"><input id="checkall" type="checkbox" checked> Select/Deselect All</li>');
+	$("#checkall").click(function(){
+		$('input:checkbox').not(this).prop('checked', this.checked);
+	});
+	data.forEach(function(d){
+		var str = '';
+		str += '<li class="list-group-item py-2 border-0">';
+		str += '<input type="checkbox" name="uid" value="' + d.id_str +'" checked> ';
+		str +=  '[' + format_date(d.date) + '] ';
+		if(d.filled) {
+			str += ' <a href="javascript:make_request({\'id_str\':\''+d.id_str+'\',\'metric\':{{ metric.id }}})">';
+			str += d.screen_name+'</a> ';
+		} else {
+			str += d.id_str + ' ';
+		}
+		str += '(<a href="/twitter_user/'+d.id_str+'">show page</a>)';
+		str += '</li>';
+		$('#users').append(str);
+	});
+	$('#userInfoModal').modal('show');
+}
+
+
+
+
+
+
+
+
+$(document).ready(function(){
+	$("#nBin").attr({
+		'max':d3.min([diff_days,width]),
+	}).val(initial_value);
+	$('#date_from').val(format_date(first_date));
+	$('#date_to').val(format_date(last_date));
+
+})
+{% endblock %}
+
+{% block content %}
+
+
+<!-- Modal -->
+<div class="modal" id="userInfoModal" tabindex="-1" role="dialog" aria-labelledby="userInfoModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+    <div class="modal-content">
+		<div class="alert alert-danger d-none" role="alert" id="modal-errors"></div>
+      <div class="modal-header">
+        <h5 class="modal-title" id="user_info_name"></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+		  <div class="row">
+			  <div class="col">
+				  <div id="user_info" style="display:none">
+						<div class="row">
+						  <div class="col" id="profile-pic">
+						  </div>
+						  <div class="col">
+							  <div class="profile_obj"><span class="profile_obj_t">ID:</span> <span id="user_info_id_str"></span></div>
+							  <div class="profile_obj"><span class="profile_obj_t">Followers:</span> <span id="followers_count"></span></div>
+							  <div class="profile_obj"><span class="profile_obj_t">Friends:</span> <span id="friends_count"></span></div>
+							  <div class="profile_obj"><span class="profile_obj_t">Favorites:</span> <span id="favourites_count"></span></div>
+							  <div class="profile_obj"><span class="profile_obj_t">Listed:</span> <span id="listed_count"></span></div>
+							  <div class="profile_obj"><span class="profile_obj_t">Created:</span> <span id="created_at"></span></div>
+							  <div class="profile_obj"><span class="profile_obj_t">Statuses:</span> <span id="statuses_count"></span></div>
+							  <div class="profile_obj"><span class="profile_obj_t">First seen:</span> <span id="inserted_at"></span></div>
+							  <div class="profile_obj"><span class="profile_obj_t">Tweets seen:</span> <span id="tweets_seen"></span></div>
+						  </div>
+					  </div>
+					  <div class="row pt-1">
+						  <div class="col"><button class="btn btn-outline-success btn-block btn-sm" id="show-profile">Show profile</button></div>
+						  <div class="col"><button class="btn btn-outline-success btn-block btn-sm" id="add-to-selection">Add to selection</button></div>
+						  <div class="col"><button class="btn btn-outline-success btn-block btn-sm" id="update_user">Update user</button></div>
+						  <!--<div class="col"><button class="btn btn-outline-success btn-block" id="show-on-twitter">Show on Twitter</button></div>-->
+
+					  </div>
+					  <h5 class="pt-2">Facts</h5>
+					  <div class="row"><div class="col" id="facts"></div></div>
+					  <h5>Entities</h5>
+					  <div class="row"><div class="col" id="entities"><ul class="list-group list-group-flush"></ul></div></div>
+					  <h5>Tags</h5>
+					  <div class="row"><div class="col" id="tags"><ul class="list-group list-group-flush"></ul></div></div>
+
+				</div>
+				  <div id="instructions">
+					  Click on a user screen name to see their details.
+				  </div>
+			  </div>
+			  <div class="col">
+
+				  <div class="row">
+
+
+		  <div class="row">
+			  <div class="col w-100 mr-2">
+				  <button class="btn btn-outline-success mb-3 btn-block" id="add-community-selection">Add users to selection</button>
+
+			<form id="users_form" class="mr-2 w-100">
+			<input type="hidden" name="campaign" value="{{ metric.campaign.id }}">
+			<input type="hidden" name="selection_target" value="twitter_users">
+			<input type="hidden" name="selection_method" value="specified">
+			  <ul class="mr-2 w-100 list-group list-group-flush" id="users" style="max-height:400px;overflow-y:scroll"></ul>
+			</form>
+			  </div>
+		  </div>
+
+
+
+			</div>
+			  </div>
+		  </div>
+
+
+
+
+
+
+		</div>
+	  </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- end modal -->
+
+
+
+
+
+
+<div class="row mt-10">
+	<div class="col-lg-3 col-md-2 col-sm-12">
+		<div class="card">
+			<div class="card-header">
+				{{ metric.name }}
+			</div>
+			<div class="card-body">
+                <p>{{ metric.description }}</p>
+				<ul class="list-group list-group-flush">
+                    <li class="list-group-item"><span class="text-muted">Related campaign:</span>
+                        <a href="{{ metric.campaign.get_absolute_url }}">{{ metric.campaign.name }}</a></li>
+				  <li class="list-group-item"><span class="text-muted">Started at:</span> {{ metric.computation_start }}</li>
+				  <li class="list-group-item"><span class="text-muted">Finished at:</span> {{ metric.computation_end }}</li>
+				  <li class="list-group-item"><span class="text-muted"><abbr title="Was the metric run on all elements of the campaign (at the time of computation) or only on a subset?">Target extension</abbr>:</span>
+                      {% if metric.campaign_wide %} campaign wide {% else %} selected elements {% endif %} </li>
+                  {% if metric.twitter_users.exists %}
+				    <li class="list-group-item"><span class="text-muted"># Users analyzed:</span> {{ metric.twitter_users.count}}</li>
+                  {% endif %}
+                  {% if metric.tweets.exists %}
+				    <li class="list-group-item"><span class="text-muted"># Tweets analyzed:</span> {{ metric.tweets.count}}</li>
+                  {% endif %}
+                  {% if metric.tagged_users.exists %}
+				    <li class="list-group-item"><span class="text-muted"># Tagged Users:</span> {{ metric.tagged_users.count}}</li>
+                  {% endif %}
+                  {% if metric.tagged_tweets.exists %}
+				    <li class="list-group-item"><span class="text-muted"># Tagged Tweets:</span> {{ metric.tagged_tweets.count}}</li>
+                  {% endif %}
+
+				  <li class="list-group-item"><span class="text-muted">Finished at:</span> {{ metric.computation_end }}</li>
+				</ul>
+			</div>		</div>
+
+
+	</div>
+	<div class="col-lg-9 col-md-10 col-sm-12">
+		<div class="card">
+			<div class="card-header">
+				Chart
+			</div>
+			<div class="card-body">
+				<div class="row">
+					<div class="col">
+					<p>
+					  <label>Granularity</label><br>
+					  <input type="range" min="1" max="100" step="1"  id="nBin">
+					</p>
+					</div>
+					<div class="col">
+					<p>
+					  <label>First date:</label><br>
+					  <input data-provide="datepicker" name="date_from" id="date_from" value="" data-date-format="yyyy/mm/dd">
+					</p>
+					</div>
+					<div class="col">
+					<p>
+					  <label>Last date:</label><br>
+					  <input data-provide="datepicker" name="date_to" id="date_to" value="" data-date-format="yyyy/mm/dd">
+					</p>
+					</div>
+				</div>
+
+				<div class="responsive" id="creationDateChart"></div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+<div class="row">
+		<div class="col-12">
+		<div class="card">
+				<div class="card-header">
+					Top {{metric.number_of_communities}} creation dates
+				</div>
+				<div class="card-body">
+				   <div class="list-group list-group-flush">
+				   {% for community in metric.communities.all %}
+						 <a data-toggle="collapse" href="#community-{{ community.community_id }}"  class="list-group-item list-group-item-action">
+							 {{ community.description }} <span class="badge badge-primary badge-pill">{{community.twitter_users.count}}</span></a>
+						 <div id ="community-{{ community.community_id }}" class="collapse list-group">
+							 {{ community.twitter_users.all|twitter_users_table }}
+						 </div>
+
+				   {% endfor %}
+				</div>
+			</div>
+		</div>
+		</div>
+</div>
+
+
+<script>
+
+	// set the dimensions and margins of the graph
+	var max_width = 500;
+	var max_height = 250;
+	var margin = {top: 10, right: 30, bottom: 30, left: 40},
+		width = max_width - margin.left - margin.right,
+		height = max_height - margin.top - margin.bottom;
+
+	// append the svg object to the body of the page
+	var svg = d3.select("#creationDateChart")
+	  .append("svg")
+		.attr("viewBox", "0, 0, " + max_width + ", " + max_height)
+		.attr("preserveAspectRatio", "xMidYMid meet")
+	  .append("g")
+		.attr("transform",
+			  "translate(" + margin.left + "," + margin.top + ")");
+
+
+	var dates = {{ metric.get_json }};
+	var first_date = d3.min(dates, function(d) { return d.date });;
+	var last_date = d3.max(dates, function(d) { return d.date });
+	var diff_days = Math.ceil((last_date-first_date) / (1000 * 60 * 60));
+	var date_format = d3.timeFormat("%d/%m/%y");
+	var nBin = d3.min([50,diff_days]);
+	var date_to = last_date;
+	var date_from = first_date;
+
+	var x = d3.scaleTime()
+	  .domain([first_date, last_date])
+	  .range([0, width]);
+
+	var xAxis = svg.append("g")
+	  .attr("transform", "translate(0," + height + ")")
+	  .call(d3.axisBottom(x));
+
+	var y = d3.scaleLinear()
+	  .range([height, 0]);
+	var yAxis = svg.append("g")
+
+
+	// add a tooltip
+	// https://www.d3-graph-gallery.com/graph/histogram_tooltip.html
+	// Add a tooltip div. Here I define the general feature of the tooltip: stuff that do not depend on the data point.
+	  // Its opacity is set to 0: we don't see it by default.
+	  var tooltip = d3.select("#creationDateChart")
+		.append("div")
+		.style("opacity", 0)
+		.attr("class", "tooltip")
+		.style("background-color", "black")
+		.style("color", "white")
+		.style("border-radius", "5px")
+		.style("padding", "10px")
+
+	  // A function that change this tooltip when the user hover a point.
+	  // Its opacity is set to 1: we can now see it. Plus it set the text and position of tooltip depending on the datapoint (d)
+	  var showTooltip = function(d) {
+		tooltip
+		  .transition()
+		  .duration(100)
+		  .style("opacity", 1)
+		tooltip
+		  .html("Range: " + format_date(d.x0) + " - " + format_date(d.x1) + '.<br> Click on a bar to see more details.')
+		  .style("left", (d3.mouse(this)[0]+300) + "px")
+		  .style("top", (d3.mouse(this)[1]+300) + "px")
+	  }
+	  var moveTooltip = function(d) {
+		tooltip
+		.style("left", (d3.mouse(this)[0]+300) + "px")
+		.style("top", (d3.mouse(this)[1]+300) + "px")
+	  }
+	  // A function that change this tooltip when the leaves a point: just need to set opacity to 0 again
+	  var hideTooltip = function(d) {
+		tooltip
+		  .transition()
+		  .duration(100)
+		  .style("opacity", 0)
+	  }
+
+
+
+	function get_filtered_data(data, date_from, date_to) {
+		return data.filter(function(point) { return point.date >= date_from && point.date <= date_to; });
+	}
+
+
+
+	function update(nBin, date_1, date_2) {
+
+		// update the number of BARS
+		nBin = d3.min([nBin,diff_days]);
+
+		// redraw histogram based on new domain
+		if(date_1)
+			date_from = date_1;
+		if(date_2)
+			date_to = date_2;
+		diff_days = Math.ceil((last_date-first_date) / (1000 * 60 * 60));
+		var dates_updates = get_filtered_data(dates, date_from, date_to);
+
+		x = d3.scaleTime()
+		  .domain([date_from, date_to])
+		  .range([0, width]);
+
+
+		// set the parameters for the histogram
+		var histogram = d3.histogram()
+			.value(function(d) { return d.date; })
+			.domain(x.domain())
+			.thresholds(x.ticks(nBin));
+
+		// And apply this function to data to get the bins
+		var bins = histogram(dates_updates);
+
+		// X axis: update now that we know the domain
+		x.domain([date_from, date_to])
+		xAxis
+			.transition()
+			.duration(1000)
+			.call(d3.axisBottom(x));
+
+
+		// Y axis: update now that we know the domain
+		y.domain([0, d3.max(bins, function(d) { return d.length; })]);   // d3.hist has to be called before the Y axis obviously
+		yAxis
+			.transition()
+			.duration(1000)
+			.call(d3.axisLeft(y));
+
+		// Join the rect with the bins data
+		var u = svg.selectAll("rect")
+			.data(bins)
+
+		// Manage the existing bars and eventually the new ones:
+		u
+			.enter()
+			.append("rect") // Add a new rect for each new elements
+			.on('click',function(d) { show_users(d) })
+			// Show tooltip on hover
+			.on("mouseover", showTooltip )
+			.on("mousemove", moveTooltip )
+			.on("mouseleave", hideTooltip )
+
+			.merge(u) // get the already existing elements as well
+			.transition() // and apply changes to all of them
+			.duration(1000)
+			  .attr("x", 1)
+			  .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
+			  .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
+			  .attr("height", function(d) { return height - y(d.length); })
+			  .style("fill", "rgba(255, 99, 132, 1)")
+
+
+		// If less bar in the new histogram, I delete the ones not in use anymore
+		u
+			.exit()
+			.remove()
+	}
+
+
+
+	// Initialize with diff_days bins
+	update(nBin,date_from,date_to);
+
+
+	// Listen to the button -> update if user change it
+	d3.select("#nBin").on("input", function() {
+		nBin = +this.value;
+		update(nBin, date_from, date_to);
+	});
+	$('#date_from').datepicker()
+    .on('changeDate', function(e) {
+       date_from = new Date($('#date_from').datepicker('getFormattedDate'));
+       update(nBin, date_from, date_to);
+    });
+	$('#date_to').datepicker()
+    .on('changeDate', function(e) {
+       date_to = new Date($('#date_to').datepicker('getFormattedDate'));
+       update(nBin, date_from, date_to);
+    });
+
+</script>
+
+{% endblock %}

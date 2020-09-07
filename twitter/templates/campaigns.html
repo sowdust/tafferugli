@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+
+{% block tag_title %}
+	Campaigns
+{% endblock %}
+
+
+
+{% block script %}
+$(document).ready(function(){
+
+});
+{% endblock %}
+
+
+
+{% block content %}
+
+
+<div class="row">
+{% for campaign in campaigns %}
+        <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+            <h3>{{ campaign.name }}</h3>
+            <p class="lead">{{ campaign.description }}</p>
+            <a href="{{ campaign.get_absolute_url }}" class="btn btn-outline-success btn-block">Details</a>
+            <ul class="list-group">
+                <li class="list-group-item">Started on {{ campaign.start_date }}</li>
+                <li class="list-group-item">{{ campaign.id | counter_update:"tweet,campaign"}} tweets</li>
+                <li class="list-group-item">{{ campaign.id | counter_update:"twitter_user,campaign"}} users</li>
+                <li class="list-group-item"><strong class="text-uppercase text-muted">Monitored Entities</strong></li>
+                {% for entity in campaign.entities.all %}
+                <li class="list-group-item"><a href="{{ entity.get_absolute_url }}">{{ entity.name }}</a></li>
+                {% endfor %}
+                {% if campaign.facts.exists %}
+                <li class="list-group-item"><strong class="text-uppercase text-muted">Facts</strong></li>
+                {% endif %}
+                {% for fact in campaign.facts.all %}
+                <li class="list-group-item"><span class="text-muted">[{{ fact.inserted_at | date:"yy-m-d"}}]</span>
+                    <abbr title="{{ fact.description }}">{{ fact.text }}</abbr></li>
+                {% endfor %}
+            </ul>
+            <a href="{% url 'manage_campaign' campaign.slug %}" class="btn btn-outline-danger btn-block">Edit</a>
+        </div>
+
+{% endfor %}
+</div>
+{% endblock %}

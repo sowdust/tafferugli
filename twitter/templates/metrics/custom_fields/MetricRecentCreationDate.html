@@ -1,0 +1,10 @@
+<div class="card">
+
+    <div class="card-body">
+        {% if metric.since_today %}
+        Users who have been created within {{ metric.days_interval}} days before the metric run time ({{ metric.computation_start }}).
+        {% else %}
+        Users who have been created within {{ metric.days_interval}} days before their insertion date (i.e.: the date they were first observed).
+        {% endif %}
+    </div>
+</div>

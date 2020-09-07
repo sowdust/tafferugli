@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+{% load static %}
+
+{% block title %}
+	User {{ twitter_user.name }}
+{% endblock %}
+
+{% block custom_head %}
+<!-- MDBootstrap Datatables  -->
+<link href="{% static 'mdb/css/addons/datatables.min.css' %}" rel="stylesheet">
+<!-- MDBootstrap Datatables  -->
+<script type="text/javascript" src="{% static 'mdb/js/addons/datatables.min.js' %}"></script>
+<!-- tag sripts -->
+<script type="text/javascript" src="{% static 'js/tokeninput.js' %}"></script>
+<link href="{% static 'css/token-input.css' %}" type="text/css" media="all" rel="stylesheet" />
+
+<!-- Font Awesome (for arrows) -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css">
+<style type="text/css">
+	.list-group-max-height{
+		max-height: 400px;
+		margin-bottom: 10px;
+		overflow-y:auto;
+		-webkit-overflow-scrolling: touch;
+	}
+</style>
+{% endblock %}
+
+{% block script %}
+table_functions(searching=true,paging=false);
+
+// hooks "update user" button
+$(document).ready(function(){
+
+    // user update via API
+    $("#update_user").on('click', function(){
+      $.ajax({
+          url: '{{ twitter_user.get_absolute_url }}',
+          type : "POST",
+          dataType : 'json',
+          data : {'action':'fetch'},
+          success : function(response) {
+            process_response(response);
+            window.location.reload(false);
+          },
+          error: process_error_response
+      });
+    });
+
+    // hook notes button
+    $("#update_notes").on('click', function(){
+      $.ajax({
+          url: '{% url 'note_add' %}',
+          type : "POST",
+          dataType : 'json',
+          data : {'object_type':'twitter_user', 'object_id' : '{{ twitter_user.id_int }}', 'content' :  $("#note_content").val() },
+          success : function(response) {
+            process_response(response);
+          },
+          error: process_error_response
+      });
+    });
+});
+
+/* manage tags */
+var url_tag_add = "{% url 'tag_add'  %}";
+var url_tag_list = "{% url 'tag_list' %}";
+var url_tag_remove = "{% url 'tag_remove'  %}";
+var object_type = "twitter_user";
+var object_id = "{{ twitter_user.id_str }}";
+var pre_populated_tags = [{% for tag in twitter_user.tags.all %}
+                {id: {{ tag.id }}, name: "{{ tag.name }}"},
+                {% endfor %}];
+prepare_tags(url_tag_add,url_tag_list,url_tag_remove,object_type,object_id,pre_populated_tags);
+
+{% endblock %}
+
+{% block content %}
+
+
+{% if twitter_user.filled %}
+
+<div class="row">
+  <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+    <div class="card">
+      <img class="card-img-top" src="{{ twitter_user.get_profile_picture | profile_image_resize }}" alt="{{ twitter_user.screen_name}} current profile picture">
+    </div>
+    <div>
+      <a href="#TweetsTable" class="btn btn-outline-success btn-block">Go to Tweets</a>
+      <button type="button" class="btn btn-outline-danger btn-block" id="update_user">Update user via API</button>
+    </div>
+      <div class="pt-4">
+          <h4>Tags</h4>
+          <input type="text" id="tags-input" name="blah" />
+        <ul>
+        {% for tag in user.tags.all %}
+        <li><a href="{% url 'view-tag' tag.id %}">{{ tag.name }}</a></li>
+        {% endfor %}
+        </ul>
+          <div id="create_tag_message"></div>
+      </div>
+      <div>
+        <h4>Notes</h4>
+        <div class="form-group">
+        <textarea name="notes" id="note_content" width="100%"  class="form-control" style="min-width: 100%">{{ twitter_user.notes }}</textarea>
+          </div>
+        <div class="form-group">
+        <button type="button" class="btn btn-outline-info btn-block" id="update_notes">Update notes</button>
+        </div>
+      </div>
+  </div>
+
+
+  <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+    <div class="card">
+      <div class="card-body">
+        <p class="text-right mb-2"><a href="javascript:;" onclick="javascript:link_external_website('https://twitter.com/{{twitter_user.screen_name}}')">@{{twitter_user.screen_name}}</a></p>
+        <h4 class="card-title">{{ twitter_user.name }}</h4>
+        <ul class="list-group list-group-flush">
+          <p class="card-text lead"> {{ twitter_user.description }}</p>
+          <li class="list-group-item"><span class="text-muted">Created at:</span> {{ twitter_user.created_at }}</li>
+          <li class="list-group-item"><span class="text-muted">First seen:</span> {{ twitter_user.inserted_at }}</li>
+          <li class="list-group-item"><span class="text-muted">Last updated:</span> {{ twitter_user.updated_at }}</li>
+          <li class="list-group-item"><span class="text-muted">From:</span> {{ twitter_user.location }}</li>
+          <li class="list-group-item"><span class="text-muted">Website:</span> <a href="javascript:;" onclick="javascript:link_external_website('{{ twitter_user.url }}')">{{ twitter_user.url }}</a> </li>
+          <li class="list-group-item"><span class="text-muted">#Followers</span>: {{ twitter_user.followers_count }}</li>
+          <li class="list-group-item"><span class="text-muted">#Friends</span>: {{ twitter_user.friends_count }}</li>
+          <li class="list-group-item"><span class="text-muted">#Tweets</span>: {{ twitter_user.statuses_count }}</li>
+          <li class="list-group-item"><span class="text-muted">#Stored tweets</span>: {{ twitter_user.tweets_authored.count }}</li>
+          <li class="list-group-item"><span class="text-muted">#Favorites</span>: {{ twitter_user.favourites_count }}</li>
+          <li class="list-group-item"><span class="text-muted">#Listed</span>: {{ twitter_user.listed_count }}</li>
+        </ul>
+        </div>
+    </div>
+
+
+    <div class="card">
+      <div class="card-body">
+          <h6 class="text-upper">Sources</h6>
+        <ul class="list-group list-group-flush list-group-max-height">
+          {% for source in twitter_user.get_sources.all %}
+          <li class="list-group-item border-0"><a href="{{ source.get_absolute_url }}">{{ source.name }}</a> {{ source.url }} [{{source.counter}}]</li>
+        {% endfor %}
+         </ul>
+        </div>
+    </div>
+  </div>
+
+
+  <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+    <div class="card">
+      <div class="card-body">
+          <h6 class="text-upper">Campaigns</h6>
+        <ul class="list-group list-group-flush">
+          {% for campaign in twitter_user.triggering_campaigns.all %}
+          <li class="list-group-item border-0"><a href="{{ campaign.get_absolute_url }}">{{ campaign.name }}</a></li>
+          {% endfor %}
+          <h6 class="text-upper">Entities</h6>
+          {% for entity in twitter_user.triggering_entity.all %}
+          <li class="list-group-item border-0"><a href="{{ entity.get_absolute_url }}">{{ entity.name }}</a></li>
+          {% endfor %}
+        </ul>
+        <h6 class="text-upper">Tagged in metrics</h6>
+          <ul class="list-group list-group-flush">
+            {% for metric in twitter_user.metrics.all.select_subclasses %}
+            <li class="list-group-item border-0"><a href="{{ metric.get_absolute_url }}">{{ metric.name }}</a></li>
+            {% endfor %}
+          </ul>
+        <h6 class="text-upper">Facts</h6>
+          <ul class="list-group list-group-flush">
+            {% for fact in twitter_user.facts.all %}
+            <li class="list-group-item border-0"><abbr title="{{ fact.description }}">{{ fact.text }}</abbr></li>
+            {% endfor %}
+          </ul>
+
+        </div>
+
+      <div class="card">
+      <div class="card-body">
+          <h6 class="text-upper">Domains</h6>
+        <ul class="list-group list-group-flush list-group-max-height">
+          {% for domain in twitter_user.get_domains.all %}
+          <li class="list-group-item border-0">{{ domain.hostname }} [{{ domain.counter }}]</li>
+        {% endfor %}
+         </ul>
+        </div>
+    </div>
+    </div>
+
+
+  </div>
+
+
+
+  <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+
+
+     <div class="card">
+      <div class="card-body">
+          <h6 class="text-upper">Hashtags</h6>
+        <ul class="list-group list-group-flush list-group-max-height">
+          {% for hashtag in twitter_user.get_hashtags.all %}
+          <li class="list-group-item border-0"><a href="{{ hashtag.get_absolute_url }}">{{ hashtag }}</a> [{{ hashtag.counter }}]</li>
+        {% endfor %}
+         </ul>
+        </div>
+    </div>
+
+
+
+    <div class="card">
+      <div class="card-body">
+          <h6 class="text-upper">URLs</h6>
+        <ul class="list-group list-group-flush list-group-max-height">
+          {% for url in twitter_user.get_urls.all %}
+          <li class="list-group-item border-0"><a href="{{ url.get_absolute_url }}">{{ url.expanded_url }} </a> [{{ url.counter }}]</li>
+        {% endfor %}
+         </ul>
+        </div>
+    </div>
+  </div>
+
+
+</div>
+
+
+
+
+{{ twitter_user.get_tweets.all | tweets_table }}
+
+{% else %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="row">
+  <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+    <div>
+      <a href="#TweetsTable" class="btn btn-outline-success btn-block">Go to Tweets</a>
+      <button type="button" class="btn btn-outline-danger btn-block" id="update_user">Update user via API</button>
+    </div>
+      <div>
+          <h4>Tags</h4>
+          <input type="text" id="tags-input" name="blah" />
+        <ul>
+        {% for tag in user.tags.all %}
+        <li><a href="{% url 'view-tag' tag.id %}">{{ tag.name }}</a></li>
+        {% endfor %}
+        </ul>
+          <div id="create_tag_message"></div>
+      </div>
+  </div>
+
+
+  <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title">Stub User</h4>
+        <p>This user is only a stub. Click the "Update user via API" button to retrieve information from Twitter and store it. </p>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item"><span class="text-muted">First seen:</span> {{ twitter_user.inserted_at }}</li>
+        </ul>
+        </div>
+    </div>
+
+
+
+  </div>
+
+
+  <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+    <div class="card">
+      <div class="card-body">
+          <h6 class="text-upper">Campaigns</h6>
+        <ul class="list-group list-group-flush">
+          {% for campaign in twitter_user.triggering_campaigns.all %}
+          <li class="list-group-item border-0"><a href="{{ campaign.get_absolute_url }}">{{ campaign.name }}</a></li>
+          {% endfor %}
+          <h6 class="text-upper">Entities</h6>
+          {% for entity in twitter_user.triggering_entity.all %}
+          <li class="list-group-item border-0"><a href="{{ entity.get_absolute_url }}">{{ entity.name }}</a></li>
+          {% endfor %}
+        </ul>
+        <h6 class="text-upper">Tagged in metrics</h6>
+          <ul class="list-group list-group-flush">
+            {% for metric in twitter_user.metrics.all.select_subclasses %}
+            <li class="list-group-item border-0"><a href="{{ metric.get_absolute_url }}">{{ metric.name }}</a></li>
+            {% endfor %}
+          </ul>
+        <h6 class="text-upper">Facts</h6>
+          <ul class="list-group list-group-flush">
+            {% for fact in twitter_user.facts.all %}
+            <li class="list-group-item border-0"><abbr title="{{ fact.description }}">{{ fact.text }}</abbr></li>
+            {% endfor %}
+          </ul>
+
+        </div>
+
+    </div>
+
+
+  </div>
+
+
+
+</div>
+
+
+{% endif %}
+
+
+
+{% endblock %}

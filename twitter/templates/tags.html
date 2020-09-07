@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}
+	Tags
+{% endblock %}
+
+
+{% block content %}
+
+<ul>
+{% for tag in tags %}
+	<li><a href="{{ tag.id }}">{{ tag.name }}</a></li>
+{% endfor %}
+</ul>
+
+{% endblock %}
+
+

@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+{% load static %}
+
+{% block title %}
+	URL {{ url.expanded_url }}
+{% endblock %}
+
+{% block custom_head %}
+<!-- MDBootstrap Datatables  -->
+<link href="{% static 'mdb/css/addons/datatables.min.css' %}" rel="stylesheet">
+<!-- MDBootstrap Datatables  -->
+<script type="text/javascript" src="{% static 'mdb/js/addons/datatables.min.js' %}"></script>
+<!-- Font Awesome (for arrows) -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css">
+{% endblock %}
+
+
+
+{% block script %}
+table_functions(searching=true,paging=true,pageLength=250);
+{% endblock %}
+
+{% block content %}
+
+
+<div class="row">
+      <div class="col-lg-3  col-md-6 col-xs-12">
+        <div class="card">
+            <div class="card-body">
+
+                <h4>{{ hostname }}</h4>
+
+                <ul class="list-group list-group-flush list-group-max-height">
+                    <li class="list-group-item border-0"><span class="text-muted"># URLs:</span> {{ urls.count }} </li>
+                    <li class="list-group-item border-0"><span class="text-muted"># Users:</span> {{ twitter_users.count }} </li>
+                    <li class="list-group-item border-0"><span class="text-muted"># Tweets:</span>  {{ tweets|length }} </li>
+                </ul>
+
+
+        </div>
+            </div>
+        <a href="#users_section" class="btn btn-outline-success btn-block">Go to Users</a>
+          <a href="#tweets_section" class="btn btn-outline-success btn-block">Go to Tweets</a>
+
+
+      </div>
+
+
+
+    <div class="col-lg-3 col-md-6 col-xs-12">
+
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-uppercase">Campaigns</h6>
+                <ul class="list-group list-group-flush list-group-max-height">
+                {% for key, values in campaigns.items %}
+                    <li class="list-group-item border-0"><a href="{{ values.campaign.get_absolute_url }}"> {{values.campaign.name}} </a>[{{ values.counter }}]</li>
+                {% endfor %}
+                </ul>
+                <h6 class="text-uppercase">Entities</h6>
+                <ul class="list-group list-group-flush list-group-max-height">
+                {% for key, values in entities.items %}
+                    <li class="list-group-item border-0"><a href="{{ values.entity.get_absolute_url }}"> {{values.entity.name}} </a>[{{ values.counter }}]</li>
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+      </div>
+
+
+
+
+    <div class="col-lg-6 col-md-12 col-xs-12">
+        {% if urls.exists %}
+
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-uppercase">URLs on the same domain</h6>
+                <ul class="list-group list-group-flush list-group-max-height">
+                {% for u in urls.all %}
+                    <li class="list-group-item border-0"><a href="{{ u.get_absolute_url }}">{{ u.expanded_url }}</a></li>
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+      </div>
+
+
+
+</div>
+
+{% if twitter_users.exists %}
+<p></p>
+<h2 class="h2"><a name="users_section">Users</a></h2>
+{% if campaign.slug %}
+{% bootstrap_button "Add selected to your selection" button_type="submit" button_class="btn-success" name="add_selection" size="sm" %}
+
+  <form id="users_form">
+    <input type="hidden" name="campaign" value="{{ campaign.slug }}">
+    <input type="hidden" name="selection_target" value="twitter_users">
+    <input type="hidden" name="selection_method" value="specified">
+
+{{ twitter_users | twitter_users_table:True }}
+  </form>
+{% else %}
+
+{{ twitter_users | twitter_users_table:False }}
+
+{% endif %}
+{% endif %}
+
+
+
+
+
+{% if tweets %}
+<p></p>
+<h2><a name="tweets_section">Tweets</a></h2>
+{% if campaign.slug %}
+{% bootstrap_button "Add selected to your selection" button_type="submit" button_class="btn-success" name="add_selection" size="sm" %}
+
+  <form id="tweets_form">
+    <input type="hidden" name="campaign" value="{{ campaign.slug }}">
+    <input type="hidden" name="selection_target" value="tweets">
+    <input type="hidden" name="selection_method" value="specified">
+
+{{ tweets | tweets_table:True }}
+  </form>
+{% else %}
+
+{{ tweets | tweets_table:False }}
+
+{% endif %}
+{% endif %}
+
+{% endblock %}
+
+

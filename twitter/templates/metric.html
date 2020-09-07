@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+
+{% block title %}
+	Metric {{ metric.name }} for campaign {{ metric.campaign.name }}
+{% endblock %}
+
+
+{% block script %}
+table_functions(searching=true,paging=true);
+{% endblock %}
+
+
+{% block content %}
+
+
+<div class="row mt-10">
+	<div class="col-lg-3 col-md-2 col-sm-12">
+		<div class="card">
+			<div class="card-header">
+				{{ metric.name }}
+			</div>
+			<div class="card-body">
+
+                <p>{{ metric.description }}</p>
+                <p>{{ metric.custom_description }}</p>
+				<ul class="list-group list-group-flush">
+                    <li class="list-group-item"><span class="text-muted">Related campaign:</span>
+                        <a href="{{ metric.campaign.get_absolute_url }}">{{ metric.campaign.name }}</a></li>
+				  <li class="list-group-item"><span class="text-muted">Started at:</span> {{ metric.computation_start }}</li>
+				  <li class="list-group-item"><span class="text-muted">Finished at:</span> {{ metric.computation_end }}</li>
+				  <li class="list-group-item"><span class="text-muted"><abbr title="Was the metric run on all elements of the campaign (at the time of computation) or only on a subset?">Target extension</abbr>:</span>
+                      {% if metric.campaign_wide %} campaign wide {% else %} selected elements {% endif %} </li>
+                  {% if metric.twitter_users.exists %}
+				    <li class="list-group-item"><span class="text-muted"># Users analyzed:</span> {{ metric.twitter_users.count}}</li>
+                  {% endif %}
+                  {% if metric.tweets.exists %}
+				    <li class="list-group-item"><span class="text-muted"># Tweets analyzed:</span> {{ metric.tweets.count}}</li>
+                  {% endif %}
+                  {% if metric.tagged_users.exists %}
+				    <li class="list-group-item"><span class="text-muted"># Tagged Users:</span> {{ metric.tagged_users.count}}</li>
+                  {% endif %}
+                  {% if metric.tagged_tweets.exists %}
+				    <li class="list-group-item"><span class="text-muted"># Tagged Tweets:</span> {{ metric.tagged_tweets.count}}</li>
+                  {% endif %}
+
+				  <li class="list-group-item"><span class="text-muted">Finished at:</span> {{ metric.computation_end }}</li>
+				</ul>
+			</div>
+		</div>
+
+
+	</div>
+	<div class="col-lg-9 col-md-10 col-sm-12">
+		{% if metric.template_custom_fields %}
+		{% include metric.template_custom_fields %}
+		{% endif %}
+	</div>
+</div>
+<div></div>
+{% if metric.tagged_users.exists %}
+<div class="row mt-10 pt-10">
+	<div class="col mt-10">
+		<div class="card mt-10">
+			<div class="card-header">
+				Tagged users
+			</div>
+			<div class="card-body">
+			{{ metric.tagged_users.all | twitter_users_table:True }}
+
+			</div>
+		</div>
+	</div>
+</div>
+{% endif %}
+
+
+{% if metric.tagged_tweets.exists %}
+<div class="row">
+	<div class="card">
+		<div class="card-header">
+			Tagged users
+		</div>
+		<div class="card-body">
+
+        {{ metric.tagged_tweets.all | tweets_table:True }}
+
+
+
+		</div>
+	</div>
+</div>
+{% endif %}
+
+
+{% endblock %}

@@ -1,0 +1,29 @@
+<div class="form-group">
+  <input type="text" name="metric_name" class="form-control" placeholder="Name" aria-label="Name">
+</div>
+<div class="form-group">
+
+  <div class="form-check form-check-inline">
+    Count the days since:
+      <label class="form-check-label ml-3" for="inserted_date-radio">
+      The date the user was first inserted in the database
+    </label>
+      <input class="form-check-input ml-3" type="radio" name="metric_since_today" id="inserted_date-radio" value="false" checked>
+  </div>
+  <div class="form-check form-check-inline">
+      <label class="form-check-label ml-3" for="today-radio">
+      Today
+    </label>
+      <input class="form-check-input ml-3" type="radio" name="metric_since_today" id="today-radio" value="true" checked>
+  </div>
+
+</div>
+<div class="form-group">
+  <label for="metric_days_interval">How many days</label>
+  <div class="input-group mb-3">
+    <input type="number" name="metric_days_interval" id="metric_days_interval" class="form-control" placeholder="Days ago" aria-label="Days ago" value="30">
+  </div>
+</div>
+<div class="form-group">
+  <textarea class="form-control" name="metric_description" placeholder="Description"></textarea>
+</div>

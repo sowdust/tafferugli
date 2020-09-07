@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+
+{% block title %}
+	Search
+{% endblock %}
+
+
+
+{% block content %}
+
+
+
+<!-- BEGIN SELECTION FORM -->
+<form id="selection_form" method="post" action="{% url 'search' campaign.slug %}">
+	{% csrf_token %}
+	<input type="hidden" name="selection_method" value="filtered">
+	<input type="hidden" value="{{ campaign.slug }}" name="campaign">
+
+
+	<div class="row align-middle">
+			<div class="form-group">
+				<div class="form-check form-check-inline">
+					Search for:
+					<label class="form-check-label ml-3" for="tweets-radio">
+					Tweets
+				  </label>
+				  <input class="form-check-input ml-3" type="radio" name="selection_target" id="tweets-radio" value="tweets" checked>
+				</div>
+				<div class="form-check form-check-inline">
+				  <label class="form-check-label" for="twitter_users-radio">
+					Twitter Users
+				  </label>
+				  <input class="form-check-input ml-3" type="radio" name="selection_target" id="twitter_users-radio" value="twitter_users">
+				</div>
+			</div>
+			<div class="form-group ml-3">
+				<div class="btn-group" role="group" aria-label="Actions">
+				  <button type="submit" class="btn btn-success" name="search">Explore</button>
+				 <!-- <button type="submit" class="btn btn-info" name="add-to-selection" >Add to selection</button> -->
+				</div>
+			</div>
+	</div>
+
+
+	<div class="row" id="twitter_users_div">
+
+		<div class="col-md-4 col-sm-6 col-xs-12">
+			<div class="card">
+				<div class="card-header">
+					Metrics
+				</div>
+				<div class="card-body">
+					<div class="form-group">
+						<label for="filter_metrics">Elements that have been "tagged" by the following metrics (leave empty to ignore):</label><br>
+						<select name="filter_metrics" multiple="multiple" class="form-control" id="filter_metrics" size="10">
+							{% for m in metrics %}
+							<option value="{{ m.id }}">{{m.name}} ({{m.computation_end }})</option>
+							{% endfor %}
+						</select><br>
+						<a href="javascript:none;" onclick="$('#filter_metrics option').prop('selected', true);">Select All</a>
+						<a  href="javascript:none;" onclick="javascript:$('#filter_metrics').val([]);">Clear selection</a><br><br>
+						  <input class="form-check-input" type="checkbox" value="true" id="filter_metrics_and" name="filter_metrics_and">
+						  <label class="form-check-label" for="filter_metrics_and">
+							logical AND search - otherwise all elements tagged in any of the selected metrics will be returned.
+						  </label>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+
+		<div class="col-md-4 col-sm-6 col-xs-12">
+			<div class="card">
+				<div class="card-header">
+					Entities
+				</div>
+				<div class="card-body">
+					<div class="form-group">
+						<label for="filter_entities">Elements linked to the following entities:</label><br>
+						<select name="filter_entities" multiple="multiple" class="form-control" id="filter_entities" size="10">
+							{% for m in entities %}
+							<option value="{{ m.slug }}">{{m.name}}</option>
+							{% endfor %}
+						</select><br>
+						<a href="javascript:none;" onclick="$('#filter_entities option').prop('selected', true);">Select All</a>
+						<a  href="javascript:none;" onclick="javascript:$('#filter_entities').val([]);">Clear selection</a><br><br>
+						  <input class="form-check-input" type="checkbox" value="true" id="filter_entities_and" name="filter_entities_and">
+						  <label class="form-check-label" for="filter_entities_and">
+							logical AND search - otherwise all elements linked to any of the selected entities will be returned.
+						  </label>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+
+		<div class="col-md-4 col-sm-6 col-xs-12">
+			<div class="card">
+				<div class="card-header">
+					Hashtags
+				</div>
+				<div class="card-body">
+					<div class="form-group">
+						<label for="filter_hashtags">Elements linked to the following hashtags:</label><br>
+						<select name="filter_hashtags" multiple="multiple" class="form-control" id="filter_hashtags" size="10">
+							{% for m in hashtags %}
+							<option value="{{ m.id }}">{{m.text}}</option>
+							{% endfor %}
+						</select><br>
+						<a href="javascript:none;" onclick="$('#filter_hashtags option').prop('selected', true);">Select All</a>
+						<a  href="javascript:none;" onclick="javascript:$('#filter_hashtags').val([]);">Clear selection</a><br><br>
+						  <input class="form-check-input" type="checkbox" value="true" id="filter_hashtags_and" name="filter_hashtags_and">
+						  <label class="form-check-label" for="filter_hashtags_and">
+							logical AND search - otherwise all elements linked to any of the selected hashtags will be returned.
+						  </label>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="col-md-4 col-sm-6 col-xs-12">
+			<div class="card">
+				<div class="card-header">
+					Sources
+				</div>
+				<div class="card-body">
+					<div class="form-group">
+						<label for="filter_sources">Elements linked to the following Sources:</label><br>
+						<select name="filter_sources" multiple="multiple" class="form-control" id="filter_sources" size="10">
+							{% for m in sources %}
+							<option value="{{ m.id }}">{{m.name}}</option>
+							{% endfor %}
+						</select><br>
+						<a href="javascript:none;" onclick="$('#filter_sources option').prop('selected', true);">Select All</a>
+						<a  href="javascript:none;" onclick="javascript:$('#filter_sources').val([]);">Clear selection</a><br><br>
+							<!--
+								Enable "AND" search only when a search that makes sense in this case is implemented
+							 <br>
+						  <input class="form-check-input" type="checkbox" value="true" id="filter_sources_and" name="filter_sources_and">
+						  <label class="form-check-label" for="filter_sources_and">
+							logical AND search - otherwise all elements linked to any of the selected sources will be returned.
+						  </label>
+						  -->
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+
+
+		<div class="col-md-4 col-sm-6 col-xs-12">
+			<div class="card">
+				<div class="card-header">
+					URLs
+				</div>
+				<div class="card-body">
+					<div class="form-group">
+						<label for="filter_urls">Elements linked to the following URLs:</label><br>
+						<select name="filter_urls" multiple="multiple" class="form-control" id="filter_urls" size="10">
+							{% for m in urls %}
+							<option value="{{ m.id }}">{{m.expanded_url}}</option>
+							{% endfor %}
+						</select><br>
+						<a href="javascript:none;" onclick="$('#filter_urls option').prop('selected', true);">Select All</a>
+						<a  href="javascript:none;" onclick="javascript:$('#filter_urls').val([]);">Clear selection</a><br><br>
+						  <input class="form-check-input" type="checkbox" value="true" id="filter_urls_and" name="filter_urls_and">
+						  <label class="form-check-label" for="filter_urls_and">
+							logical AND search - otherwise all elements linked to any of the selected URLs will be returned.
+						  </label>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="col-md-4 col-sm-6 col-xs-12">
+			<div class="card">
+				<div class="card-header">
+					Custom tags
+				</div>
+				<div class="card-body">
+					<div class="form-group">
+						<label for="filter_tags">Elements that have been tagged with the following custom labels:</label><br>
+						<select name="filter_tags" multiple="multiple" class="form-control" id="filter_tags" size="10">
+							{% for m in tags %}
+							<option value="{{ m.id }}">{{m.name}}</option>
+							{% endfor %}
+						</select><br>
+						<a href="javascript:none;" onclick="$('#filter_tags option').prop('selected', true);">Select All</a>
+						<a  href="javascript:none;" onclick="javascript:$('#filter_tags').val([]);">Clear selection</a><br><br>
+						  <input class="form-check-input" type="checkbox" value="true" id="filter_tags_and" name="filter_tags_and">
+						  <label class="form-check-label" for="filter_tags_and">
+							logical AND search - otherwise all elements tagged with any of the selected labels will be returned.
+						  </label>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+
+
+
+
+	</div>
+</form>
+
+
+
+
+{% endblock %}

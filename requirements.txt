@@ -1,0 +1,15 @@
+#  virtualenv --system-site-packages env --python /usr/bin/python3
+django
+#twint
+tweepy
+resource # linux only
+svglib
+unidecode
+matplotlib
+python-louvain
+django-jquery
+django-autoslug
+django-taggit
+django-bootstrap4
+django-model-utils
+django-background-tasks

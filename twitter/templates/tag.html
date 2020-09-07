@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}
+	Tag {{ tag.name }}
+{% endblock %}
+
+
+{% block content %}
+
+<div class="row">
+
+	<div class="col-md-3 col-sm-4 col-xs-6">
+		<div class="card">
+			<div class="card-header">Tweets</div>
+			<div class="card-body">
+				<ul class="list-group list-group-flush">
+					{% for tweet in tweets %}
+					<li class="list-group-item border-0 border-0"><a href="{{ tweet.get_absolute_url }}">{{ tweet.id_str }}</a> by <a href="{{tweet.author.get_absolute_url }}">{{ tweet.author.screen_name }}</a>: {{tweet.text}}</li>
+					{% endfor %}
+				</ul>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-md-3 col-sm-4 col-xs-6">
+		<div class="card">
+			<div class="card-header">Twitter Users</div>
+			<div class="card-body">
+				<ul class="list-group list-group-flush">
+					{% for user in twitter_users %}
+					<li class="list-group-item border-0 border-0"><a href="{{ user.get_absolute_url }}">@{{ user.screen_name }}</a> {{ user.name }}</li>
+					{% endfor %}
+				</ul>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-md-3 col-sm-4 col-xs-6">
+		<div class="card">
+			<div class="card-header">Communities</div>
+			<div class="card-body">
+				{% for community in communities %}
+				{{ community }}
+				{% endfor %}
+			</div>
+		</div>
+	</div>
+
+	<div class="col-md-3 col-sm-4 col-xs-6">
+		<div class="card">
+			<div class="card-header">Urls</div>
+			<div class="card-body">
+				{% for url in urls %}
+				{{ url }}
+				{% endfor %}
+			</div>
+		</div>
+	</div>
+
+
+	<div class="col-md-3 col-sm-4 col-xs-6">
+		<div class="card">
+			<div class="card-header">Sources</div>
+			<div class="card-body">
+				{% for source in sources %}
+				{{ source }}
+				{% endfor %}
+			</div>
+		</div>
+	</div>
+
+
+	<div class="col-md-3 col-sm-4 col-xs-6">
+		<div class="card">
+			<div class="card-header">Hashtag</div>
+			<div class="card-body">
+				{% for hashtag in hashtags %}
+				{{ hashtag }}
+				{% endfor %}
+			</div>
+		</div>
+	</div>
+
+
+</div>
+
+{% endblock %}
+

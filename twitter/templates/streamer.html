@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+
+{% block title %}
+	Streamer {{ streamer.id }}
+{% endblock %}
+
+
+{% block script %}
+$(document).ready(function(){
+   $("[name='start']").click(function(e){
+   	e.preventDefault();
+   	var data = {}
+   	$.ajax({
+   		type : 'GET',
+   		url :  "{% url 'streamer_action' streamer.id 'start' %}",
+   		data : data,
+   		success : process_response,
+   		error : process_error_response
+   	})
+   })
+   $("[name='stop']").click(function(e){
+   	e.preventDefault();
+   	var data = {}
+   	$.ajax({
+   		type : 'GET',
+   		url :  "{% url 'streamer_action' streamer.id 'stop' %}",
+   		data : data,
+   		success : process_response,
+   		error : process_error_response
+   	})
+   })
+})
+{% endblock %}
+
+
+
+{% block content %}
+
+
+<div class="row">
+	<div class="col-lg-4 col-md-6 col-xs-12">
+		<div class="card">
+			<div class="card-header">
+				{{ streamer }}
+				<div class="float-right">
+				{% if streamer.active %}
+					<span class="badge badge-success">Active</span>
+				{% else %}
+					<span class="badge badge-secondary">Inactive</span>
+				{% endif %}
+				</div>
+			</div>
+			<div class="card-body">
+				<div class="row">
+					<div class="col pb-3 text-right">
+						<div class="btn-group" role="group">
+						{% bootstrap_button "Start" button_type="submit" button_class="btn-success" name="start" size="md" %}
+						{% bootstrap_button "Stop" button_type="submit" button_class="btn-danger" name="stop" size="md" %}
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col">
+						<span class="text-muted">Campaign:</span> <a href="{{ streamer.campaign.get_absolute_url }}">{{ streamer.campaign.name }}</a>
+						<br><span class="text-muted">Created:</span> {{ streamer.created_at }}
+						<br><span class="text-muted">Started:</span> {{ streamer.started_at }}
+						<br /><span class="text-muted">Expires:</span> {{ streamer.expires_at }}
+						<br /><span class="text-muted">Stopped:</span> {{ streamer.stopped_at }}
+						<br /><span class="text-muted">Hearbeat:</span> {{ streamer.last_heartbeat }}
+						<br /><span class="text-muted">Enabled:</span> {{ streamer.enabled }}
+						<br /><span class="text-muted">PID:</span> {{ streamer.pid }}
+						<br /><span class="text-muted">Memory usage:</span> {{ streamer.memory_usage }}
+						<br /><span class="text-muted">Nested level:</span> {{ streamer.max_nested_level }}
+						<br /><span class="text-muted">To terminate:</span> {{ streamer.termination_flag }}
+						<br /><span class="text-muted">#Tweets collected:</span> {{ streamer.id | counter_update:"tweet,streamer"}}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-lg-4 col-md-6 col-xs-12">
+		<div class="card">
+			<div class="card-header">Monitored entities</div>
+			<div class="card-body">
+				<ul>
+				{% for entity in streamer.entities.all %}
+					<li><a href="{% url 'entity' entity.slug %}">{{ entity.name }}</a></li>
+				{% endfor %}
+				</ul>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

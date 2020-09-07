@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}
+	Twitter Users
+{% endblock %}
+
+
+{% block content %}
+
+Total users: {{ page_obj.paginator.count }}
+
+<div class="table-responsive">
+<table class="table table-sm  table-hover">
+  <thead>
+    <tr>
+      <th scope="col">Handle</th>
+      <th scope="col">Name</th>
+      <th scope="col">Followers</th>
+      <th scope="col">Friends</th>
+      <th scope="col">Listed</th>
+      <th scope="col">Fav</th>
+      <th scope="col">Tweets</th>
+      <th scope="col">Created</th>
+
+
+    </tr>
+  </thead>
+  <tbody>
+  	{% for twitter_user in page_obj %}
+    <tr>
+      <td><a href="{% url 'twitter_user' twitter_user.id_str %}">{{ twitter_user.screen_name }}</a></td>
+      <td>{{ twitter_user.name }}</td>
+      <td>{{ twitter_user.followers_count }}</td>
+      <td>{{ twitter_user.friends_count }}</td>
+      <td>{{ twitter_user.listed_count }}</td>
+      <td>{{ twitter_user.favourites_count }}</td>
+      <td>{{ twitter_user.statuses_count }}</td>
+      <td>{{ twitter_user.created_at }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% bootstrap_pagination page_obj %}
+
+
+{% endblock %}
+
+

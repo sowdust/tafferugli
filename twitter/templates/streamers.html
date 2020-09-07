@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+
+{% block title %}
+	Streamers
+{% endblock %}
+
+
+{% block content %}
+
+<div class="row">
+{% for streamer in streamers %}
+
+	<div class="col">
+		<div class="card">
+			<div class="card-header">
+				{{ streamer }}
+				<div class="float-right">
+				{% if streamer.active %}
+					<span class="badge badge-success">Active</span>
+				{% else %}
+					<span class="badge badge-secondary">Inactive</span>
+				{% endif %}
+				</div>
+			</div>
+			<div class="card-body">
+				<span class="text-muted">Campaign:</span> <a href="{{ streamer.campaign.get_absolute_url }}">{{ streamer.campaign.name }}</a>
+				<br><span class="text-muted">Started:</span> {{ streamer.started_at }}
+				<br /><span class="text-muted">Expires:</span> {{ streamer.expires_at }}
+				<br /><span class="text-muted">Stopped:</span> {{ streamer.stopped_at }}
+				<br /><span class="text-muted">#Tweets collected:</span> {{ streamer.id | counter_update:"tweet,streamer"}}
+				<br />
+				<br /><span class="text-muted">Monitored entities:</span>
+
+				<ul>
+				{% for entity in streamer.entities.all %}
+					<li><a href="{% url 'entity' entity.slug %}">{{ entity.name }}</a></li>
+				{% endfor %}
+
+				</ul>
+	            <a href="{{ streamer.get_absolute_url }}" class="btn btn-outline-success btn-block">Details</a>
+
+			</div>
+		</div>
+	</div>
+{% endfor %}
+
+</div>
+
+
+
+
+{% endblock %}

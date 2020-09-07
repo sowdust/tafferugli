@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+{% load static %}
+
+{% block title %}
+	Community {{ community.id }} for campaign {{ community.campaign.name }}
+{% endblock %}
+
+
+{% block custom_head %}
+<!-- MDBootstrap Datatables  -->
+<link href="{% static 'mdb/css/addons/datatables.min.css' %}" rel="stylesheet">
+<!-- MDBootstrap Datatables  -->
+<script type="text/javascript" src="{% static 'mdb/js/addons/datatables.min.js' %}"></script>
+<!-- tag sripts -->
+<script type="text/javascript" src="{% static 'js/tokeninput.js' %}"></script>
+<link href="{% static 'css/token-input.css' %}" type="text/css" media="all" rel="stylesheet" />
+<!-- Font Awesome (for arrows) -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css">
+<style type="text/css">
+	.list-group-max-height{
+		max-height: 400px;
+		margin-bottom: 10px;
+		overflow-y:auto;
+		-webkit-overflow-scrolling: touch;
+	}
+</style>
+{% endblock %}
+
+{% block script %}
+/* manage tags */
+var url_tag_add = "{% url 'tag_add'  %}";
+var url_tag_list = "{% url 'tag_list' %}";
+var url_tag_remove = "{% url 'tag_remove'  %}";
+var object_type = "twitter_user";
+var object_id = "{{ twitter_user.id_str }}";
+var pre_populated_tags = [{% for tag in twitter_user.tags.all %}
+                {id: {{ tag.id }}, name: "{{ tag.name }}"},
+                {% endfor %}];
+prepare_tags(url_tag_add,url_tag_list,url_tag_remove,object_type,object_id,pre_populated_tags);
+{% endblock %}
+
+
+$(document).ready(function(){
+    // hook notes button
+    $("#update_notes").on('click', function(){
+      $.ajax({
+          url: '{% url 'note_add' %}',
+          type : "POST",
+          dataType : 'json',
+          data : {'object_type':'community', 'object_id' : '{{ community.id }}', 'content' :  $("#note_content").val() },
+          success : function(response) {
+            process_response(response);
+          },
+          error: process_error_response
+      });
+    });
+});
+
+
+{% block content %}
+
+<p>{{ community.description }}</p>
+
+      <div>
+        <h4>Notes</h4>
+        <div class="form-group">
+        <textarea name="notes" id="note_content" width="100%"  class="form-control" style="min-width: 100%">{{ community.notes }}</textarea>
+          </div>
+        <div class="form-group">
+        <button type="button" class="btn btn-outline-info btn-block" id="update_notes">Update notes</button>
+        </div>
+      </div>
+
+<ul>
+{% for twitter_user in community.twitter_users.all %}
+   <li><a href="{% url 'twitter_user' twitter_user.id_str %}">{{ twitter_user.name }}</a> [ {{twitter_user.screen_name }} ]</li>
+{% endfor %}
+</ul>
+
+{% endblock %}
