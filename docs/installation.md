@@ -29,7 +29,7 @@ Install [graph-tool](https://git.skewed.de/count0/graph-tool/-/wikis/installatio
 echo "deb http://downloads.skewed.de/apt DISTRIBUTION main" >> /etc/apt/sources.list
 apt-key adv --keyserver keys.openpgp.org --recv-key 612DEFB798507F25
 apt update
-apt install python3-graph-tool, python3-cairo
+apt install python3-graph-tool python3-cairo
 ```
 (Remember to change DISTRIBUTION with yours. It can be one of: bullseye, buster, sid, bionic, disco, eoan).
 
