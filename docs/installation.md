@@ -49,7 +49,7 @@ pip install -r requirements.txt
 
 ## Configuration
 
-You can configure some entries in the file settings.py
+You can configure some entries in the file settings.py. Also, remember to **change the default value of SECRET_KEY** with any random string of that length (50 characters - no whitespaces).
 
 By default, Tafferugli is configured to run locally and to use a SQLite database. However, SQLite does not manage concurrency very well, often returning the error "Database is locked". 
 For this reason and for performance, it is strongly recommended to setup and use another database backend (PostgreSQL or MySQL). The file settings.py already contains a default database configuration for PostgreSQL.
