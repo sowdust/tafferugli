@@ -60,6 +60,7 @@ For this reason and for performance, it is strongly recommended to setup and use
 
 ```bash
 python manage.py makemigrations
+python manage.py makemigrations twitter
 python manage.py migrate
 python manage.py createsuperuser
 # Follow the instructions to create one admin user
