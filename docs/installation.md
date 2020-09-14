@@ -31,7 +31,7 @@ apt-key adv --keyserver keys.openpgp.org --recv-key 612DEFB798507F25
 apt update
 apt install python3-graph-tool python3-cairo
 ```
-(Remember to change DISTRIBUTION with yours. It can be one of: bullseye, buster, sid, bionic, disco, eoan).
+(Remember to change DISTRIBUTION with yours. It can be one of: bullseye, buster, sid, bionic, disco, eoan). You can find out by issuing the command ```lsb_release -cs```
 
 
 
