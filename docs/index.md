@@ -24,8 +24,8 @@ It comes with a set of default **metrics** already implemented, and the possibil
 {: refdef}
 
 [![Dashboard](/assets/dashboard.png)](/assets/dashboard.png)
-[![Tweet graph metric](/assets/graph.png)](/assets/dashboard.png)
-[![Tweet distribution time metric](/assets/distribution_time.png)](/assets/dashboard.png)
+[![Tweet graph metric](/assets/graph.png)](/assets/graph.png)
+[![Tweet distribution time metric](/assets/distribution_time.png)](/assets/distribution_time.png)
 
 ### License
 
