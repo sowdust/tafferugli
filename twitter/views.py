@@ -13,7 +13,7 @@ from django.core.paginator import Paginator
 from django.forms import modelformset_factory
 from django.db.models import Count
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_protect, csrf_exempt
+from django.views.decorators.csrf import csrf_protect
 from django.template.loader import render_to_string
 from taggit.models import Tag
 
@@ -233,7 +233,6 @@ def forbidden(request):
     return render(request, 'forbidden.html', {})
 
 
-@csrf_exempt
 @require_http_methods(['POST'])
 def count(request):
     resp = {'counter': None}
