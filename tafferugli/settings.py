@@ -27,7 +27,7 @@ SECRET_KEY = 'g(p5qlq#(0$f5rj910=04r3@e#m#=wfihv1n91v*#r*4q9uc7='
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['.tafferugli.io','localhost']
+ALLOWED_HOSTS = ['*']
 
 if DEBUG:
     DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
