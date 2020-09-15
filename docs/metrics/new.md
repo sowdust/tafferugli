@@ -23,7 +23,7 @@ Metrics are implemented as Python classes in the file ```models/metrics.py``` an
  - must have the following properties:
     - ```description```: a brief text on what the metrics does
     - ```target_type```: a choice specifying the type of the target (one among ```TARGET_USERS```, ```TARGET_TWEETS```, ```TARGET_ANY```, ```TARGET_BOTHS```)
- - must overwrite the method ```computation()```, which returns ```True```  when the computation ends withouth errors
+ - must overwrite the method ```computation()```, which returns ```True```  when the computation ends without errors
 
 Each Metric class, by default, depending on its ```target_type```, has the attributes ```tweets``` and/or ```twitter_users```, that are Django Querysets objects of type ```Tweet``` and/or ```TwitterUser```. By default, they contain the **selection** target on which the metric was executed (alteratively, if executed campaign-wide, they contain all tweets/users linked to a campaign). 
 
