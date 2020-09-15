@@ -315,7 +315,7 @@ def streamer_action(request, id, action):
         streamer.stop()
         messages.add_message(request, messages.INFO, 'Streamer stopped')
     else:
-        messages.add_message(request, messages.ERROR, 'Action %s uknown' % action)
+        messages.add_message(request, messages.ERROR, 'Action %s unknown' % action)
 
     response = _messages_response(request)
     return JsonResponse(response)
