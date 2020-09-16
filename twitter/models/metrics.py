@@ -478,7 +478,7 @@ class MetricGraphTweetNetwork(Metric):
     all_tweets = models.ManyToManyField('Tweet', blank=True)
     all_twitter_users = models.ManyToManyField('TwitterUser', blank=True)
     min_degree = models.PositiveSmallIntegerField(
-        default=0, help_text='Minimun degree of nodes to be included in the JS graph (in order not to make'
+        default=0, help_text='Minimum degree of nodes to be included in the JS graph (in order not to make'
                              + ' it explode with irrelevant nodes')
 
     def set_target(self, twitter_users=None, tweets=None):
@@ -634,7 +634,7 @@ class MetricGraphCommunityNetwork(Metric):
         default=True, help_text='if false,the metric will use information already stored in the db without'
                                 + ' retrieving friends & followers from Twitter')
     min_degree = models.PositiveSmallIntegerField(
-        default=2, help_text='Minimun degree of nodes to be included in the JS graph (in order not to make'
+        default=2, help_text='Minimum degree of nodes to be included in the JS graph (in order not to make'
                              + ' it explode with irrelevant nodes')
 
     def set_params_from_req(self, post_dict):

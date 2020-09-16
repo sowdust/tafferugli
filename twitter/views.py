@@ -122,8 +122,8 @@ def _filter_results(request, campaign):
         filter_metrics = ['%d' % int(i) for i in request.POST.getlist('filter_metrics')]
     if 'filter_entities' in request.POST:
         filter_entities = request.POST.getlist('filter_entities')
-    if 'fiter_data_center' in request.POST:
-        filter_data_center = request.POST.getlist('fiter_data_center')
+    if 'filter_data_center' in request.POST:
+        filter_data_center = request.POST.getlist('filter_data_center')
     if 'filter_hashtags' in request.POST:
         filter_hashtags = request.POST.getlist('filter_hashtags')
     if 'filter_urls' in request.POST:
@@ -314,7 +314,7 @@ def streamer_action(request, id, action):
         streamer.stop()
         messages.add_message(request, messages.INFO, 'Streamer stopped')
     else:
-        messages.add_message(request, messages.ERROR, 'Action %s uknown' % action)
+        messages.add_message(request, messages.ERROR, 'Action %s unknown' % action)
 
     response = _messages_response(request)
     return JsonResponse(response)

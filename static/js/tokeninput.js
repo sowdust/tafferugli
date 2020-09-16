@@ -140,7 +140,7 @@ $.TokenList = function (input, url_or_data, settings) {
         // Set the url to query against
         settings.url = url_or_data;
 
-        // If the URL is a function, evaluate it here to do our initalization work
+        // If the URL is a function, evaluate it here to do our initialization work
         var url = computeURL();
 
         // Make a smart guess about cross-domain if it wasn't explicitly specified
@@ -763,7 +763,7 @@ $.TokenList = function (input, url_or_data, settings) {
             // Are we doing an ajax search or local data search?
             if(settings.url) {
                 var url = computeURL();
-                // Extract exisiting get params
+                // Extract existing get params
                 var ajax_params = {};
                 ajax_params.data = {};
                 if(url.indexOf("?") > -1) {

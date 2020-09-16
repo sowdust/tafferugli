@@ -2,7 +2,7 @@
 
 Tafferugli is a Twitter Analysis Framework in the form of a web application that is able to **filter**, **collect** and **analyze** tweets. 
 
-It is thought as a tool to facilitate analysis of some fenomena related to propaganda operations, such as **coordinated behavior** and **automated posting**.
+It is thought as a tool to facilitate analysis of some phenomena related to propaganda operations, such as **coordinated behavior** and **automated posting**.
 
 It comes with a set of default **metrics** already implemented, and the possibility of adding custom metrics with little python code. 
 
