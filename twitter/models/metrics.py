@@ -225,7 +225,7 @@ class MetricTweetRatio(Metric):
             ratios.append(ratio)
             twitter_users_ratios[u.id_int] = ratio
             u.add_fact(self,'Tweets per day %.2f' % ratio,
-                       'User has an average of %f tweets per day as of %s' % timezone.now())
+                       'User has an average of %f tweets per day as of %s' % (ratio,timezone.now()))
 
         average = statistics.mean(ratios)
         std = statistics.stdev(ratios)
