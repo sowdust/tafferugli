@@ -224,6 +224,8 @@ class MetricTweetRatio(Metric):
             ratio = decimal.Decimal(u.statuses_count) / decimal.Decimal(days)
             ratios.append(ratio)
             twitter_users_ratios[u.id_int] = ratio
+            u.add_fact(self,'Tweets per day %.2f' % ratio,
+                       'User has an average of %f tweets per day as of %s' % timezone.now())
 
         average = statistics.mean(ratios)
         std = statistics.stdev(ratios)
@@ -247,7 +249,7 @@ class MetricFriendsFollowersRatio(Metric):
 
     def _computation(self):
         target = self.twitter_users.all().annotate(
-            ratio=Coalesce(F('friends_count') / (F('followers_count') + 1), 0)).order_by('-ratio')
+            ratio=Coalesce(F('friends_count') / (F('followers_count') + 0.00001), 0)).order_by('-ratio')
         average = target.aggregate(Avg('ratio'))['ratio__avg']
         try:
             std = target.aggregate(StdDev('ratio'))['ratio__stddev']
