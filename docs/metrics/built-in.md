@@ -88,7 +88,7 @@ It might be useful in identifying:
  - "follow for follow" accounts (users who follow any account that follows them -- not specifically implemented) 
 
 
-### MetricNameWithRegex
+### MetricUsernameWithRegex
 
 Target: users
 

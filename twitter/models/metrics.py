@@ -267,11 +267,11 @@ class MetricFriendsFollowersRatio(Metric):
         return True
 
 
-class MetricNameWithRegex(Metric):
-    template_form = 'metrics/forms/MetricNameWithRegex.html'
-    template_custom_fields = 'metrics/custom_fields/MetricNameWithRegex.html'
+class MetricUsernameWithRegex(Metric):
+    template_form = 'metrics/forms/MetricUsernameWithRegex.html'
+    template_custom_fields = 'metrics/custom_fields/MetricUsernameWithRegex.html'
     target_type = Metric.TARGET_USERS
-    regex = models.CharField(max_length=1000, default="r'([A-Za-z]+[-A-Za-z0-9_]+[0-9]{8})'")
+    regex = models.CharField(max_length=1000, default="^([A-Za-z]+[-A-Za-z0-9_]+[0-9]{8})")
     description = 'Find users whose screen names satisfy a given regex'
 
     def set_params_from_req(self, post_dict):
