@@ -679,9 +679,6 @@ class MetricGraphCommunityNetwork(Metric):
             [operation, created] = OperationConstructNetwork.objects.get_or_create(campaign=self.campaign,metric=self)
             if created:
                 logger.debug('Created operation %s' % operation)
-            else:
-                logger.debug('Already set operation %s' % operation)
-            #operation = OperationConstructNetwork()
             operation.set_target(self.twitter_users, campaign_slug=self.campaign, metric=self)
             operation.run()
             # If we are still retrieving the community graph, reschedule metric
