@@ -679,8 +679,8 @@ class MetricGraphCommunityNetwork(Metric):
             [operation, created] = OperationConstructNetwork.objects.get_or_create(campaign=self.campaign,metric=self)
             if created:
                 logger.debug('Created operation %s' % operation)
-            operation.set_target(self.twitter_users, campaign_slug=self.campaign, metric=self)
-            operation.run()
+                operation.set_target(self.twitter_users, campaign_slug=self.campaign, metric=self)
+                operation.run()
             # If we are still retrieving the community graph, reschedule metric
             sleeptime = 10
             logger.debug('Sleeping %d seconds' % sleeptime)
