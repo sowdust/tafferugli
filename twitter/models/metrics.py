@@ -680,12 +680,12 @@ class MetricGraphCommunityNetwork(Metric):
             operation.set_target(self.twitter_users, campaign_slug=self.campaign, metric=self)
             operation.run()
             # If we are still retrieving the community graph, reschedule metric
-            sleeptime = 5
+            sleeptime = 10
             logger.debug('Sleeping %d seconds' % sleeptime)
             time.sleep(sleeptime)
             with transaction.atomic():
                 op = OperationConstructNetwork.objects.select_for_update().get(pk=operation.id)
-                if not op.is_finished():
+                if op and not op.is_finished():
                     logger.debug('Still getting followers and friends')
                     backoff = timedelta(minutes=15)
                     self.compute(schedule=backoff, start=False)

@@ -104,7 +104,7 @@ TEMPLATES = [
     },
 ]
 
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 WSGI_APPLICATION = 'tafferugli.wsgi.application'
 
