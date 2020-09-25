@@ -1,4 +1,6 @@
 import atexit
+import os
+
 import tweepy
 import requests
 import logging
@@ -15,6 +17,8 @@ from model_utils.managers import InheritanceManager
 from django.db import models, transaction
 from django.db.models import Count
 from django.core.files.base import ContentFile
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 
 from twitter.tasks import background_stream, background_metric
 from background_task.models import Task
@@ -1352,6 +1356,24 @@ class CommunityGraph(models.Model):
     json = models.FileField()
     xml = models.FileField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @receiver(pre_delete)
+    def delete_graph(sender, instance, **kwargs):
+        logger.info('INSIDE PREDELETE')
+        logger.info(sender)
+        logger.info(instance)
+        logger.info(kwargs)
+
+        # Don't know why it gets called on Task as well...
+        if isinstance(instance,CommunityGraph):
+            logger.info('[*] Deleting file %s' % instance.svg.file)
+            instance.svg.delete(save=False)
+            logger.info('[*] Deleting file %s' % instance.png.file)
+            instance.png.delete(save=False)
+            logger.info('[*] Deleting file %s' % instance.xml.file)
+            instance.xml.delete(save=False)
+            logger.info('[*] Deleting file %s' % instance.json.file)
+            instance.json.delete(save=False)
 
     def get_absolute_url(self):
         return reverse('graph', args=[self.id])
