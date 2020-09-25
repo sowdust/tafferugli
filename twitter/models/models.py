@@ -1359,11 +1359,6 @@ class CommunityGraph(models.Model):
 
     @receiver(pre_delete)
     def delete_graph(sender, instance, **kwargs):
-        logger.info('INSIDE PREDELETE')
-        logger.info(sender)
-        logger.info(instance)
-        logger.info(kwargs)
-
         # Don't know why it gets called on Task as well...
         if isinstance(instance,CommunityGraph):
             logger.info('[*] Deleting file %s' % instance.svg.file)
