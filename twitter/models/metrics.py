@@ -676,7 +676,7 @@ class MetricGraphCommunityNetwork(Metric):
             logger.error('Too many users %d (max: %d)' % (self.twitter_users.count(), self.max_twitter_users))
             return False
         if self.retrieve_followers:
-            [operation, created] = OperationConstructNetwork.objects.select_for_update().get_or_create(campaign=self.campaign,metric=self)
+            [operation, created] = OperationConstructNetwork.objects.get_or_create(campaign=self.campaign,metric=self)
             if created:
                 logger.debug('Created operation %s' % operation)
             else:
