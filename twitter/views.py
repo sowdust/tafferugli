@@ -258,13 +258,18 @@ def count(request):
 
 
 def streamers(request):
-    streamers = Streamer.objects.all()
+    if request.user.is_authenticated:
+        streamers = Streamer.objects.all()
+    else:
+        streamers = Streamer.objects.filter(campaign__active=True)
     context = {'streamers': streamers}
     return render(request, 'streamers.html', context)
 
 
 def streamer(request, id):
     streamer = get_object_or_404(Streamer, pk=id)
+    if not streamer.campaign.active and not request.user.is_authenticated:
+        raise Http404()
     return render(request, 'streamer.html', {'streamer': streamer})
 
 
