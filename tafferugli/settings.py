@@ -5,7 +5,7 @@ TAFFERUGLI_VERSION = 0.1
 # Settings for background tasks
 MAX_ATTEMPTS = 25
 # maximum possible task run time, after which tasks will be unlocked and tried again (default 3600 seconds)
-MAX_RUN_TIME = 3600
+MAX_RUN_TIME = 60 * 60 * 12
 BACKGROUND_TASK_RUN_ASYNC = True
 BACKGROUND_TASK_ASYNC_THREADS = 100 # DEFAULT: multiprocessing.cpu_count()
 BACKGROUND_TASK_PRIORITY_ORDERING = 'DESC'
