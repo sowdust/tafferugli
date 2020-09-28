@@ -182,7 +182,7 @@ prepare_tags(url_tag_add,url_tag_list,url_tag_remove,object_type,object_id,pre_p
           <h6 class="text-upper">Domains</h6>
         <ul class="list-group list-group-flush list-group-max-height">
           {% for domain in twitter_user.get_domains.all %}
-          <li class="list-group-item border-0">{{ domain.hostname }} [{{ domain.counter }}]</li>
+          <li class="list-group-item border-0"><a href="{% url 'domain' domain.hostname %}">{{ domain.hostname }}</a> [{{ domain.counter }}]</li>
         {% endfor %}
          </ul>
         </div>
