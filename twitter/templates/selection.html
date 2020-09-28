@@ -140,7 +140,7 @@ var process_form_template = function(result) {
 </div>
 
 {% if twitter_users.exists %}
-	<input type="hidden" name="type" value="TW">
+	<input type="hidden" name="type" value="TU">
 {{ twitter_users | twitter_users_table:True }}
 {% endif %}
 
