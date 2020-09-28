@@ -583,6 +583,36 @@ class Fact(models.Model):
     description = models.TextField(null=True, help_text='Longer description of fact')
 
 
+class List(models.Model):
+    LIST_TWEETS = 'TW'
+    LIST_USERS = 'TU'
+    TARGET_TYPES = [LIST_TWEETS, LIST_USERS]
+    TYPE_CHOICES = [
+        (LIST_TWEETS, 'Tweets list'),
+        (LIST_USERS, 'Twitter users list')
+    ]
+    name = models.CharField(max_length=255)
+    description = models.TextField(default='')
+    campaign = models.ForeignKey('Campaign', on_delete=models.CASCADE, null=True, related_name='lists')
+    tweets = models.ManyToManyField('Tweet', blank=True)
+    twitter_users = models.ManyToManyField('TwitterUser', blank=True)
+    public = models.BooleanField(default=True)
+    type = models.CharField(
+        max_length=2,
+        choices=TYPE_CHOICES,
+        default=LIST_USERS)
+
+    def get_absolute_url(self):
+        return reverse('list_detail', args=[self.id])
+
+    def get_type_display(self):
+        if self.type == List.LIST_USERS:
+            return 'Twitter users'
+        elif self.type == List.LIST_TWEETS:
+            return 'Tweets'
+        else:
+            return 'unknown'
+
 class Metric(models.Model):
     TARGET_UNDEF = 0
     TARGET_USERS = 1
@@ -598,7 +628,7 @@ class Metric(models.Model):
 
     objects = InheritanceManager()
     # metric_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=255)
     custom_description = models.TextField(default='', help_text='User description of the metric')
     # TODO manage different kind of values
     impact = models.DecimalField(default=0, max_digits=11, decimal_places=10)
@@ -611,6 +641,8 @@ class Metric(models.Model):
     twitter_users = models.ManyToManyField('TwitterUser', blank=True)
     tagged_tweets = models.ManyToManyField('Tweet', blank=True, related_name='%(class)ss')
     tagged_users = models.ManyToManyField('TwitterUser', blank=True, related_name='%(class)ss')
+    list = models.ForeignKey('List', null=True, related_name='metrics', on_delete=models.CASCADE,
+                             help_text='List the metric is computed on')
     campaign = models.ForeignKey('Campaign', on_delete=models.CASCADE, null=True,
                                  blank=True, related_name='%(class)ss')
     target_set = models.BooleanField(default=False, help_text='Whether the target (tweets and/or users) has been set')
@@ -1384,3 +1416,4 @@ class CommunityGraph(models.Model):
 
     def get_xml(self):
         return self.xml.url
+

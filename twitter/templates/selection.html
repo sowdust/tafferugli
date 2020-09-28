@@ -20,8 +20,35 @@
 
 {% block script %}
 
-table_functions(searching=true,paging=true,pageLength=250);
+table_functions(searching=true,paging=true,pageLength=500);
 $(document).ready(function(){
+
+	/* ADD SELECTED USERS TO EXISTING LIST  */
+	$("[name='list_add']").click(function(e){
+	e.preventDefault()
+	  $.ajax({
+		  url: '{% url 'list_add' %}',
+		  type : "POST",
+		  dataType : 'json',
+		  data : $("#metric_target_form").serialize(),
+		  success : process_response,
+		  error: process_error_response
+	  })
+	});
+
+	/* ADD SELECTED USERS TO NEW LIST  */
+	$("[name='list_create']").click(function(e){
+	e.preventDefault()
+	  $.ajax({
+		  url: '{% url 'list_create' %}',
+		  type : "POST",
+		  dataType : 'json',
+		  data : $("#metric_target_form").serialize(),
+		  success : process_response,
+		  error: process_error_response
+	  })
+	});
+
 	/* COMPUTE SELECTED METRIC FOR USERS  */
 	$("[name='start']").click(function(e){
 	e.preventDefault()
@@ -49,19 +76,15 @@ $(document).ready(function(){
 
 });
 
-
-
 var process_form_template = function(result) {
     $('#form_template').html(result['form_template']);
 }
-
 
 {% endblock %}
 
 
 
 {% block content %}
-
 
 <div class="row">
 	<div class="col">
@@ -80,27 +103,50 @@ var process_form_template = function(result) {
 <input type="hidden" name="campaign" value="{{ campaign }}">
 
 <div class="row">
-	<div class="col-lg-6 col-md-12">
+	<div class="col-4">
 		<div class="form-group">
 			<select name="metric" id="metric">
 				<option value="" selected disabled> ... </option>
-			{% for m in metrics %}
-				<option value="{{m.name}}">{{m.name}}: {{m.description}}</option>
-			{% endfor %}
+				{% for m in metrics %}
+					<option value="{{ m.name }}">{{ m.name }}: {{ m.description }}</option>
+				{% endfor %}
 			</select>
-	</div>
+		</div>
 		<div id="form_template"></div>
 			{% bootstrap_button "Start computation" button_type="submit" button_class="btn-success" name="start" size="sm" %}
 			<!--{% bootstrap_button "Recreate network" button_type="submit" button_class="btn-info" name="create-network" size="sm" %}-->
 		</div>
+
+	<div class="col-4">
+		<div class="form-group">
+			<select name="list_id" id="list_add">
+				<option value="" selected disabled> ... </option>
+				{% for l in lists %}
+					<option value="{{ l.id }}">{{ l.name }}: {{ l.description }}</option>
+				{% endfor %}
+			</select><br>
+			{% bootstrap_button "Add to list" button_type="submit" button_class="btn-success" name="list_add" size="sm" %}
+		</div>
+	</div>
+
+	<div class="col-4">
+		<div class="form-group">
+			<input type="text" class="form-control" name="name" placeholder="List name">
+			<textarea class="form-control" rows="1" name="description" placeholder="List description"></textarea>
+			{% bootstrap_button "Create new list" button_type="submit" button_class="btn-success" name="list_create" size="sm" %}
+		</div>
+	</div>
+
 </div>
 
 {% if twitter_users.exists %}
+	<input type="hidden" name="type" value="TW">
 {{ twitter_users | twitter_users_table:True }}
 {% endif %}
 
 
 {% if tweets.exists %}
+	<input type="hidden" name="type" value="TW">
 {{ tweets | tweets_table }}
 {% endif %}
 

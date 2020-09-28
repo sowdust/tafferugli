@@ -117,6 +117,9 @@ Beware that the results list is paginated: you might have to either increase the
 
 ![Results of a search operation](/assets/explore_results.png)
 
+It is also possible to **create permanent lists of users and tweets**. To do so, add elements to your selection and then either create a list or add them to an existing list. This way it is possible to manage different subgroups on elements and run specific analysis on them.
+
+![Example of a list of tweets](/assets/list.png)
 
 ## Compute metrics
 

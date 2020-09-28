@@ -181,6 +181,13 @@ $(document).ready(function(){
 				{% endwith %}
 		</div>
 
+		<div class="container">
+			<h5 class="p-3">Lists</h5>
+			{% for list in campaign.lists.all %}
+				<a href="{{ list.get_absolute_url }}" title="{{ list.description }}">{{ list.name }}</a><br>
+			{% endfor %}
+		</div>
+
 	</nav>
 
         <main role="main" class="col-sm-9">

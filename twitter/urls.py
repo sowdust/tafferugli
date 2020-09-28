@@ -9,6 +9,8 @@ urlpatterns = [
     path('streamer/', views.streamers, name='streamers'),
     path('streamer/<int:id>/', views.streamer, name='streamer'),
     path('streamer/<int:id>/<slug:action>/', views.streamer_action, name='streamer_action'),
+    path('list/', views.lists, name='lists'),
+    path('list/<int:id>/', views.list_detail, name='list_detail'),
     path('entity/', views.entities, name='entities'),
     path('tag/', views.tags, name='tags'),
     path('tag/<int:tagid>', views.tag, name='tag'),
@@ -45,12 +47,15 @@ urlpatterns = [
     path('selection/<str:limit_target>', views.selection_detail, name='view_selection'),
     path('selection/dashboard/<str:limit_target>', views.selection_dashboard, name='selection_dashboard'),
     path('ajax/note/add/', views.note_add, name='note_add'),
+    path('ajax/list/create/', views.list_create, name='list_create'),
+    path('ajax/list/add/', views.list_add, name='list_add'),
     path('ajax/tag/add/', views.tag_add, name='tag_add'),
     path('ajax/tag/list/', views.tag_list, name='tag_list'),
     path('ajax/tag/remove/', views.tag_remove, name='tag_remove'),
     path('ajax/metric_form/', views.ajax_metric_form, name='ajax_metric_form'),
     path('ajax/validate_regex/', views.validate_regex, name='validate_regex'),
     path('ajax/count/', views.count, name='count'),
+
 ]
 
 if settings.DEBUG:

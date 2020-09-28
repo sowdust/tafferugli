@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+
+{% block title %}
+	List {{ list.name }}
+{% endblock %}
+
+
+{% block script %}
+
+table_functions(searching=true,paging=true,pageLength=500);
+$(document).ready(function(){
+
+	/* COMPUTE SELECTED METRIC FOR USERS  */
+	$("[name='start']").click(function(e){
+	e.preventDefault()
+	  $.ajax({
+		  url: '{% url 'metric_compute' %}',
+		  type : "POST",
+		  dataType : 'json',
+		  data : $("#metric_target_form").serialize(),
+		  success : process_response,
+		  error: process_error_response
+	  })
+	});
+
+
+	$('#metric').on('change',function() {
+		$.ajax({
+			  url: '{% url 'ajax_metric_form' %}',
+			  type : "POST",
+			  dataType : 'json',
+			  data : {'metric' : $(this).val()},
+			  success : process_form_template,
+			  error: process_error_response
+		  })
+	});
+
+});
+
+var process_form_template = function(result) {
+    $('#form_template').html(result['form_template']);
+}
+
+{% endblock %}
+
+
+
+
+{% block content %}
+
+<form name="metrics" method="post" id="metric_target_form">
+{% csrf_token %}
+<input type="hidden" name="target" value="selection">
+<input type="hidden" name="campaign" value="{{ list.campaign.id }}">
+<input type="hidden" name="list_id" value="{{ list.id }}">
+
+
+<div class="row">
+	<div class="col-2">
+		<div class="card">
+			<div class="card-header">
+				List {{ list.name }}
+			</div>
+			<div class="card-body">
+				<span class="text-muted">List Type:</span> {{ list.get_type_display }}<br>
+				<p>{{ list.description }}</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-5">
+		<div class="card">
+			<div class="card-header">
+				Compute metric
+			</div>
+			<div class="card-body">
+				<div class="form-group">
+					<select name="metric" id="metric">
+						<option value="" selected disabled> ... </option>
+						{% for m in metrics %}
+							<option value="{{ m.name }}">{{ m.name }}: {{ m.description }}</option>
+						{% endfor %}
+					</select><br>
+					{% bootstrap_button "Start computation" button_type="submit" button_class="btn-success" name="start" size="sm" %}
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-5">
+		<div class="card">
+			<div class="card-header">
+				Metrics computed on list
+			</div>
+			<div class="card-body">
+			{% for metric in list.metrics.all %}
+				{% if metric.computation_end %}
+					<span class="text-muted">{{ metric.computation_end|date:"M d H:m" }}</span> <a href="{{ metric.get_absolute_url }}">{{ metric.name }}</a><br>
+				{% else %}
+					<!--<span class="text-muted">{{ metric.computation_end|date:"M d H:m" }}</span> <a href="{{ metric.get_absolute_url }}">{{ metric.name }}</a><br>-->
+				{% endif %}
+			{% endfor %}
+			</div>
+		</div>
+	</div>
+
+
+</div>
+
+{% if list.twitter_users.exists %}
+{{ list.twitter_users.all | twitter_users_table:True }}
+{% endif %}
+
+
+{% if list.tweets.exists %}
+{{ list.tweets.all | tweets_table }}
+{% endif %}
+
+</form>
+{% endblock %}

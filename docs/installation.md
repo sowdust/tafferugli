@@ -26,7 +26,7 @@ Install [graph-tool](https://git.skewed.de/count0/graph-tool/-/wikis/installatio
 
 ```bash
 # Change DISTRIBUTION to match yours
-echo "deb http://downloads.skewed.de/apt DISTRIBUTION main" >> /etc/apt/sources.list
+echo "deb [ arch=amd64 ] http://downloads.skewed.de/apt DISTRIBUTION main" >> /etc/apt/sources.list
 apt-key adv --keyserver keys.openpgp.org --recv-key 612DEFB798507F25
 apt update
 apt install python3-graph-tool python3-cairo
@@ -93,3 +93,16 @@ python manage.py process_tasks --queue metrics-computation
 ```
 
 See [django-background-tasks.readthedocs.io](https://django-background-tasks.readthedocs.io/) for more information.
+
+
+## Upgrade
+
+The application is currently being developed, with bugs fixed and features introduced quite often.
+If you want to upgrade to the latest version, navigate to the root folder, pull the most recent updates from github and upgrade the database schema in case it was modified:
+
+```bash
+git pull
+python manage.py makemigrations twitter
+python manage.py migrate
+```
+

@@ -26,6 +26,7 @@ from .models import Tweet
 from .models import TweetSource
 from .models import URL
 from .models import Hashtag
+from .models import List
 from .forms import EntityForm, CampaignForm, StreamerForm, TwitterAccountForm
 from .models import MetricTweetTimeDistribution, MetricGraphTweetNetwork, CommunityGraph, Community, TwitterAccount
 
@@ -257,6 +258,72 @@ def count(request):
     return JsonResponse(resp)
 
 
+def lists(request):
+    if request.user.is_authenticated:
+        lists = List.objects.all()
+    else:
+        lists = List.objects.filter(public=True)
+    context = {'lists' : lists}
+    return render(request,'lists.html',context)
+
+
+def list_detail(request, id):
+    list = get_object_or_404(List, pk=id)
+    if not list.public and not request.user.is_authenticated:
+        raise Http404()
+    limit_target = 'twitter_users' if list.type == List.LIST_USERS else 'tweets'
+    metrics = Metric.get_available_metrics_meta(limit_target)
+    context = {'list' : list, 'metrics' : metrics}
+    return render(request, 'list.html', context)
+
+
+@auth_required
+@require_http_methods(['POST'])
+def list_create(request):
+    if 'name' not in request.POST or 'type' not in request.POST or 'description' not in request.POST:
+        return _error('Missing required fields')
+    if request.POST['type'] not in List.TARGET_TYPES:
+        return _error('Type not valid')
+    list = List.objects.create(name=request.POST['name'],
+                               description=request.POST['description'],
+                               type=request.POST['type'])
+    if 'tweets' in request.POST and request.POST['type'] == List.LIST_TWEETS:
+        list.tweets.set(Tweet.objects.filter(pk__in=request.POST.getlist('tweets')))
+    elif 'uid' in request.POST and request.POST['type'] == List.LIST_USERS:
+        list.twitter_users.set(TwitterUser.objects.filter(pk__in=request.POST.getlist('uid')))
+    if 'campaign' in request.POST:
+        try:
+            campaign = Campaign.objects.get(pk=request.POST['campaign'])
+            list.campaign = campaign
+        except:
+            messages.add_message(request, messages.WARNING, 'Campaign not found')
+    list.save()
+    messages.add_message(request, messages.SUCCESS, 'List %s created' % list.name)
+    response = _messages_response(request)
+    return JsonResponse(response)
+
+
+@auth_required
+@require_http_methods(['POST'])
+def list_add(request):
+    if 'list_id' not in request.POST:
+        return _error('Missing required field')
+    list = get_object_or_404(List, pk=request.POST['list_id'])
+    if list.type == List.LIST_USERS:
+        twitter_users = TwitterUser.objects.filter(pk__in=request.POST.getlist('uid'))
+        list.twitter_users.add(*twitter_users.values_list('id_int', flat=True))
+        messages.add_message(request, messages.SUCCESS, 'Added %d users to list %s' % (twitter_users.count(), list.name))
+    elif list.type == List.LIST_TWEETS:
+        tweets = Tweet.objects.filter(pk__in=request.POST.getlist('tweets'))
+        list.tweets.add(*tweets.values_list('id_int', flat=True))
+        messages.add_message(request, messages.SUCCESS, 'Added %d tweets to list %s' % (tweets.count(), list.name))
+    else:
+        messages.add_message(request, messages.ERROR, 'Something went wrong')
+    list.save()
+    response = _messages_response(request)
+    return JsonResponse(response)
+
+
 def streamers(request):
     if request.user.is_authenticated:
         streamers = Streamer.objects.all()
@@ -455,6 +522,14 @@ def metric_compute(request):
     metric = metric_class(campaign=campaign, name='%s %s' % (metric_class.__name__, campaign.name))
     metric.description = 'Metric %s computed for the whole campaign %s on %s' % (
         metric_class.__name__, campaign.name, timezone.now())
+
+    if 'list_id' in request.POST:
+        try:
+            list = List.objects.get(pk=request.POST['list_id'])
+            metric.list = list
+        except:
+            messages.add_message(request, messages.ERROR, 'List does not exist')
+
     metric.save()
 
     try:
@@ -1024,8 +1099,10 @@ def selection_detail(request, limit_target=None):
         messages.add_message(request, messages.WARNING, 'Campaign not set')
         return render(request, 'selection.html')
 
+    lists = List.objects.filter(campaign=campaign)
     metrics = Metric.get_available_metrics_meta(limit_target)
-    context = {'twitter_users': filled_twitter_users, 'tweets': filled_tweets, 'campaign': campaign, 'metrics': metrics}
+    context = {'twitter_users': filled_twitter_users, 'tweets': filled_tweets,
+               'campaign': campaign, 'metrics': metrics, 'lists' : lists}
     return render(request, 'selection.html', context)
 
 

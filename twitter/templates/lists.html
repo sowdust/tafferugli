@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+{% load twitter_extras %}
+
+{% block title %}
+	Lists
+{% endblock %}
+
+
+{% block content %}
+
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                Lists
+            </div>
+            <div class="card-body">
+                <ul>
+                {% for list in lists %}
+                <li><a href="{{ list.get_absolute_url }}" title="{{ list.description }}">{{ list.name }}</a></li>
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
