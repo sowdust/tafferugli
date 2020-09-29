@@ -82,7 +82,8 @@ var process_form_template = function(result) {
 						{% for m in metrics %}
 							<option value="{{ m.name }}">{{ m.name }}: {{ m.description }}</option>
 						{% endfor %}
-					</select><br>
+					</select>
+					<div id="form_template"></div>
 					{% bootstrap_button "Start computation" button_type="submit" button_class="btn-success" name="start" size="sm" %}
 				</div>
 			</div>
