@@ -636,7 +636,7 @@ class MetricGraphCommunityNetwork(Metric):
         default=True, help_text='if false,the metric will use information already stored in the db without'
                                 + ' retrieving friends & followers from Twitter')
     min_degree = models.PositiveSmallIntegerField(
-        default=2, help_text='Minimum degree of nodes to be included in the JS graph (in order not to make'
+        default=10, help_text='Minimum degree of nodes to be included in the JS graph (in order not to make'
                              + ' it explode with irrelevant nodes')
 
     def set_params_from_req(self, post_dict):
