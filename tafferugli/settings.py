@@ -24,6 +24,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'g(p5qlq#(0$f5rj910=04r3@e#m#=wfihv1n91v*#r*4q9uc7='
 
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

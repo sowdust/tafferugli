@@ -121,16 +121,6 @@
 				error: process_error_response
 			})
 		});
-		$('#add-community-selection').click(function() {
-			$.ajax({
-				url: '{% url 'add_to_selection' %}',
-				type : "POST",
-				dataType : 'json',
-				data : $("#users_form").serialize(),
-				success : process_response,
-				error: process_error_response
-			})
-		});
 		$("#update_user").on('click', function(){
 			$.ajax({
 				url: '/twitter_user/' + t['id_str'] + '/',
@@ -217,6 +207,16 @@ function show_users(data) {
 		str += '(<a href="/twitter_user/'+d.id_str+'">show page</a>)';
 		str += '</li>';
 		$('#users').append(str);
+	});
+	$('#add-community-selection').click(function() {
+		$.ajax({
+			url: '{% url 'add_to_selection' %}',
+			type : "POST",
+			dataType : 'json',
+			data : $("#users_form").serialize(),
+			success : process_response,
+			error: process_error_response
+		})
 	});
 	$('#userInfoModal').modal('show');
 }
