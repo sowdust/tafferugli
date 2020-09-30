@@ -11,9 +11,6 @@ permalink: /metrics/built-in
 {: .no_toc}
 
 
-Please note that no metric by itself can discriminate legitimate, coordinated, or any other classification of "behaviour".
-Their result is simply an indicator of some properties that might worth investigating more, with the help of other metrics and, overall, human judgment, in order to come to some sensible conclusion.
-
 - TOC
 {: toc}
 
@@ -25,7 +22,7 @@ Target: users.
 Tags users that did not upload a custom profile picture, **tagging** them and assigning them a specific **fact**.
 Generates a **fact** for the campaign, exposing the ratio of users having a default profile picture.
 
-This might help identifying users that were created without much effort; a higher than normal overall ratio can be an indicator of automation.
+This might help spot users that were created without much effort; a higher than normal overall ratio can be an indicator of automation.
 
 
 ### MetricDefaultTwitterProfile
@@ -48,14 +45,12 @@ This metric might help identifying spam.
 
 Target: Users.
 
-Tags users that were created "recently". The time range can be specified by the user, and can be set referring to the moment the metric is computed, or the moment that users were first been observed.
+Tags users that were created "recently". The time range can be specified by the user, and can be set referring to the moment the metric is computed, or the moment that users were first observed.
 For example:
-  - tag users that were created in the last 30 days
-  - tag users that were created no more than 10 days before we first "observed" (i.e.: stored) them
+  - tag users created in the last 30 days
+  - tag users created no more than 10 days before we first "observed" (i.e.: stored) them
 
-This metric also creates **communities** of users that were created on the same day. 
-
-It might be useful in case a bunch of users were mass created by a single entity and are used for a specific purpose.  
+This metric creates **communities** of users created on the same day. 
 
 
 ### MetricTweetRatio
@@ -64,11 +59,11 @@ Target: Users.
 
 Computes, for each target user, their specific *tweets per day* ratio.
 
-By default, it **tags** users that "tweet a lot", where a lot means more than 2 standard deviations of the average *tweets per day* ratio of the target set. Not sure if this statistics make sense -- suggestions and customisation are very welcome.
+By default, **tags** users that "tweet a lot", where a lot means more than 2 standard deviations of the average *tweets per day* ratio of the target set. Not sure if this statistics makes sense -- suggestions very welcome.
 
-It adds a **fact** to prolific users, stating their *tweets per day* ratio.
+Adds a **fact** to prolific users, stating their *tweets per day* ratio.
 
-It might be useful in identifying spam or other automated accounts.
+Might be useful in identifying spam or other automated accounts.
 
 
 ### MetricFriendsFollowersRatio
@@ -77,11 +72,11 @@ Target: Users.
 
 Computes, for each target user, their specific *friends (i.e.: # of following) per followers* ratio.
 
-By default, it **tags** users that have a "higher/lower than normal" *friends/follower* ratio, where a "higher/lower means more/less than 3 standard deviations of the average *friends/followers* ratio of the target set. Not sure if this statistics make sense -- suggestions and customisation are very welcome.
+By default, it **tags** users that have a "higher/lower than normal" *friends/follower* ratio, where a "higher/lower means more/less than 3 standard deviations of the average *friends/followers* ratio of the target set. Not sure if this statistics makes sense -- suggestions are very welcome.
 
-It adds a **fact** to tagged users, stating their *friends/followers* ratio.
+Adds a **fact** to tagged users, stating their *friends/followers* ratio.
 
-It might be useful in identifying:
+Might be useful in identifying:
 
  - influencers (low *friends/followers* ratio)
  - automated accounts created just to follow others (high *friends/followers* ratio)
@@ -92,11 +87,9 @@ It might be useful in identifying:
 
 Target: users
 
-**Tags** users who have a specific pattern in their name, defined by a custom regular expression. If computed on a whole campaign, it adds a **fact** stating the percentage of users whose username satisfies the given form.
+**Tags** users who have a specific pattern in their name, defined by a custom regular expression. If computed on a whole campaign or list, it adds a **fact** stating the percentage of users whose username satisfies the given form.
 
-The default regex, ```[A-Za-z]+[A-Za-z0-9-_]+[0-9]{8})``` identifies accounts whose username is formed by some letters and ends with 8 digits (i.e.: Username12345678).
-
-This might help identifying users that did not customise their username (using the default regex) or that were created in bulk by using the same username generating algorithm.
+The default regex, ```^([A-Za-z]+[-A-Za-z0-9_]+[0-9]{8})``` identifies accounts whose username is formed by some letters and ends with 8 digits (e.g.: Username12345678).
 
 
 ### MetricCreationDateDistribution
@@ -105,7 +98,7 @@ Target: Users.
 
 Creates **communities** of users divided by their creation date.
 
-Creates a **distribution** of users based on their creation date than can be interactively visualized as an histogram, so that one can explore and/or select users that were created in a specific time range.
+Creates a **distribution** of users based on their creation date than can be interactively visualized as a histogram, so that one can explore and/or select users that were created in a specific time range.
 
 It might be useful, among other things, in identifying specific time range in which a higher than normal number of users were created.
 

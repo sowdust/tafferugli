@@ -22,7 +22,7 @@ In other words, it is an analysis that is able to
  	- a **community** of users or a set of tweets having some property
  - retrieve further properties of tweets or users from Twitter API
 
-As of now, only a limited set of metrics has been implemented, because the project it's in its initial phase.
+As of now, only a limited set of metrics has been implemented, because the project is in its initial phase.
 
 However, it should be quite simple to extend existing metrics with a little bit of Python.
 

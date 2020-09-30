@@ -10,7 +10,8 @@ permalink: /install/
 
 Tafferugli is a web application based on django.
 
-Following, we report installation instructions for Ubuntu/Debian systems. If you need help installing it on an other system, [ask!](/contact)
+Following, we report installation instructions for [Ubuntu/Debian systems](#requirements) and [docker](#docker). If you need help installing it on an other system, [ask!](/contact)
+
 
 ## Requirements 
 
@@ -32,7 +33,6 @@ apt update
 apt install python3-graph-tool python3-cairo
 ```
 (Remember to change DISTRIBUTION with yours. It can be one of: bullseye, buster, sid, bionic, disco, eoan). You can find out by issuing the command ```lsb_release -cs```.
-
 
 
 ## Installation
@@ -105,4 +105,41 @@ git pull
 python manage.py makemigrations twitter
 python manage.py migrate
 ```
+
+
+## Docker 
+
+People from [lab61](https://www.lab61.org/) have provided the following "all-in-one" docker file.
+It is only for development purposes and it is not intended to be run in production. 
+
+
+```docker
+FROM tiagopeixoto/graph-tool:latest
+RUN yes | pacman -S python-cairo
+RUN yes | pacman -S python-pip
+RUN yes | pacman -S git
+RUN yes | pacman -S sqlite
+RUN pip install virtualenv
+RUN mkdir /app
+WORKDIR /app
+RUN git clone https://github.com/sowdust/tafferugli.git
+WORKDIR tafferugli
+RUN virtualenv --system-site-packages -p python3 env
+RUN source env/bin/activate
+RUN pip install -r requirements.txt
+RUN python manage.py makemigrations
+RUN python manage.py makemigrations twitter
+RUN python manage.py migrate
+# creating user with admin pass credentials
+RUN echo "from django.contrib.auth.models import User; User.objects.create_superuser('admin', 'admin@example.com', 'pass')" | python manage.py shell
+# creating a file to startup the application
+RUN echo "#!/bin/bash" > startup.sh
+RUN echo "nohup /usr/bin/python manage.py process_tasks > /tmp/process.log &" >> startup.sh
+RUN echo "/usr/bin/python manage.py runserver 0.0.0.0:8000" >> startup.sh
+# run the created .sh file
+RUN chmod +x startup.sh
+EXPOSE 8000
+CMD ./startup.sh
+```
+
 
