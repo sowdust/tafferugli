@@ -134,7 +134,7 @@ RUN python manage.py migrate
 RUN echo "from django.contrib.auth.models import User; User.objects.create_superuser('admin', 'admin@example.com', 'pass')" | python manage.py shell
 # creating a file to startup the application
 RUN echo "#!/bin/bash" > startup.sh
-RUN echo "nohup /usr/bin/python manage.py process_tasks > /tmp/process.log &" >> startup.sh
+RUN echo "/usr/bin/python manage.py process_tasks &" >> startup.sh
 RUN echo "/usr/bin/python manage.py runserver 0.0.0.0:8000" >> startup.sh
 # run the created .sh file
 RUN chmod +x startup.sh
