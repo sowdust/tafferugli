@@ -1,4 +1,5 @@
 import atexit
+import enum
 import os
 
 import tweepy
@@ -831,6 +832,7 @@ class TwitterUser(models.Model):
     followers_filled = models.DateTimeField(null=True)
     friends = models.ManyToManyField('TwitterUser', blank=True, related_name='friended_by')
     friends_filled = models.DateTimeField(null=True)
+    tweets_filled = models.DateTimeField(null=True)
     favorite = models.ManyToManyField('Tweet', blank=True, related_name='favorites')
     favorite_filled = models.BooleanField(default=False)
     triggering_entity = models.ManyToManyField('Entity', blank=True)  # TODO: remove
@@ -841,6 +843,7 @@ class TwitterUser(models.Model):
     directly_linked_to_campaign = models.BooleanField(default=False)
     profile_picture = models.ImageField(upload_to='pp/', null=True)
     notes = models.TextField(default='')
+    tweets = None
 
     if settings.FUZZY_COUNT:
         approx = FuzzyCountManager()
@@ -862,8 +865,55 @@ class TwitterUser(models.Model):
         return 'https://twitter.com/intent/user?user_id=%s' % self.id_str
 
     def get_tweets(self):
-        tweets = Tweet.objects.filter(author=self).distinct()
-        return tweets
+        if self.tweets:
+            return self.tweets
+        self.tweets = Tweet.objects.filter(author=self).distinct()
+        return self.tweets
+
+    def get_sequence(self):
+        """ Returns a list of dictionaries indicating the type of tweet (reply, retweet...) and its datetime """
+        if self.tweets:
+            events = self.tweets.values_list(
+                'created_at', 'in_reply_to_tweet', 'retweeted_status', 'quoted_status').order_by('created_at')
+        else:
+            events = Tweet.objects.filter(author=self).values_list(
+                'created_at', 'in_reply_to_tweet', 'retweeted_status', 'quoted_status').order_by('created_at')
+        sequence = []
+        for e in events:
+            s = {}
+            s['time'] = e[0]
+            if e[1] is not None:
+                s['type'] = TweetType.Reply
+            elif e[2] is not None:
+                s['type'] = TweetType.Retweet
+            elif e[3] is not None:
+                s['type'] = TweetType.Quote
+            else:
+                s['type'] = TweetType.Text
+            sequence.append(s)
+
+        return sequence
+
+    def get_sequence_string(self):
+        """ Similar to get_sequence, returns only a string indicating the type of tweet """
+        if self.tweets:
+            events = self.tweets.values_list(
+                'in_reply_to_tweet', 'retweeted_status', 'quoted_status').order_by('created_at')
+        else:
+            events = Tweet.objects.filter(author=self).values_list(
+                'in_reply_to_tweet', 'retweeted_status', 'quoted_status').order_by('created_at')
+        sequence = ''
+        for e in events:
+            if e[0] is not None:
+                sequence += ('%d' % TweetType.Reply.value)
+            elif e[1] is not None:
+                sequence += ('%d' %  TweetType.Retweet.value)
+            elif e[2] is not None:
+                sequence += ('%d' %  TweetType.Quote.value)
+            else:
+                sequence += ('%d' % TweetType.Text.value)
+
+        return sequence
 
     def get_urls(self, annotated=True, include_twitter=False):
         urls = URL.objects.filter(tweets__in=self.get_tweets())
@@ -1018,6 +1068,13 @@ class TwitterUser(models.Model):
         return '%s [@%s]' % (self.name, self.screen_name)
 
 
+class TweetType(enum.Enum):
+    Text = 0
+    Reply = 1
+    Retweet = 2
+    Quote = 3
+
+
 class Tweet(models.Model):
     id_int = models.BigIntegerField(primary_key=True)
     id_str = models.CharField(max_length=255)
@@ -1142,6 +1199,8 @@ class Tweet(models.Model):
     def from_id_str(cls, in_reply_to_status_id_str, triggering_campaign, streamer, nested_level):
         if streamer is not None and streamer.max_nested_level >= 0 and nested_level > streamer.max_nested_level:
             logger.debug('Max nesting level %d reached' % streamer.max_nested_level)
+            return None
+        if streamer is None:
             return None
         with transaction.atomic():
             try:

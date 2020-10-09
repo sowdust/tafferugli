@@ -4,10 +4,10 @@ import threading
 import  time
 
 from datetime import timedelta
-from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 from background_task import background
+
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +130,7 @@ def limit_handled(cursor, window_limit=15):
             break
 
 
-def _get_followers(api,id_str, max_users=0):
+def _get_followers(api, id_str, max_users=0):
     followers = []
     for ids in limit_handled(tweepy.Cursor(api.followers_ids, id=id_str).pages()):
         followers.extend(ids)
@@ -139,7 +139,7 @@ def _get_followers(api,id_str, max_users=0):
     return followers
 
 
-def _get_friends(api,id_str, max_users=0):
+def _get_friends(api, id_str, max_users=0):
     friends = []
     for ids in limit_handled(tweepy.Cursor(api.friends_ids, id=id_str).pages()):
         friends.extend(ids)
@@ -233,6 +233,39 @@ def get_users_friends(campaign_slug, twitter_users, max_users=0, days_interval=3
             operation.friends_filled = True
             operation.computation_end = timezone.now()
             logger.debug('Getting friends for operation %d finished at %s' % (operation_id,operation.computation_end))
+            operation.save()
+
+
+@background(queue='operations')
+def get_tweets(campaign_slug, twitter_users, max_tweets=0, operation_id=-1, days_interval=30):
+    from .models import Tweet
+    from .models import TwitterUser, Campaign
+    from twitter.models.operations import OperationRetrieveTweets
+
+    campaign = Campaign.objects.get(slug=campaign_slug)
+    api = campaign.get_twitter_api()
+
+    for uid in twitter_users:
+        user = TwitterUser.objects.get(pk=uid)
+        if (user.tweets_filled is None or ((timezone.now() - user.tweets_filled) > timedelta(days=days_interval))):
+            logger.debug('Getting tweets for user %s (%s)' % (user.screen_name, user.id_str))
+            counter = 0
+            for status in limit_handled(tweepy.Cursor(api.user_timeline, user_id=uid, count=max_tweets).items()):
+                tweet = Tweet.from_status(status)
+                user.tweets_filled = timezone.now()
+                user.save()
+                logger.debug('\t[%s] %s' % (tweet.id_str,tweet.text))
+                counter += 1
+                if counter >= max_tweets:
+                    break
+
+    if operation_id != -1:
+        with transaction.atomic():
+            operation = OperationRetrieveTweets.objects.select_for_update().get(pk=operation_id)
+            operation.finished = True
+            operation.computation_end = timezone.now()
+            logger.debug(
+                'Getting tweets for operation %d finished at %s' % (operation_id, operation.computation_end))
             operation.save()
 
 

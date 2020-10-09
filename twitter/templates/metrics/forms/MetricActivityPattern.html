@@ -1,0 +1,47 @@
+<div class="form-group">
+  <input type="text" name="metric_name" class="form-control" placeholder="Name" aria-label="Name">
+</div>
+<div class="alert alert-warning" role="alert">
+  This metric can take a long time if using Twitter APIs: Twitter imposes rate limits that make retrieving tweets a time consuming procedure.
+</div>
+
+<div class="form-group">
+    <label>Do you want to use the Twitter API to fetch tweets?</label><br>
+<div class="form-check-inline">
+  <input class="form-check-input" type="radio" value="true" name="retrieve_tweets" id="retrieve_tweets_true" checked>
+  <label class="form-check-label" for="defaultCheck2">
+    Retrieve data
+  </label>
+</div>
+<div class="form-check-inline">
+  <input class="form-check-input" type="radio" value="false" name="retrieve_tweets" id="retrieve_tweets_false">
+  <label class="form-check-label" for="defaultCheck2">
+    Only use data already present in the database
+  </label>
+</div>
+</div>
+
+
+<div class="form-group">
+  <label for="max_twitter_users">Don't run the metric if the target users are more than this number</label>
+  <input type="number" name="max_twitter_users" id="max_twitter_users" class="form-control" placeholder="Max # of target users" value="5000">
+</div>
+
+<div class="form-group">
+  <label for="similarity_threshold">Consider activity pattern similar if more than this # of activities were the same</label>
+  <input type="number" name="similarity_threshold" id="similarity_threshold" class="form-control" placeholder="Similarity threshold" value="10">
+</div>
+
+<div class="form-group">
+  <label for="days_interval">Retrieve tweets via API again, if last time we did as more than # days ago</label>
+  <input type="number" name="days_interval" id="days_interval" class="form-control" placeholder="days interval" value="10">
+</div>
+
+<div class="form-group">
+  <label for="max_friends">Retrieve at most this number of tweets</label>
+  <input type="number" name="max_tweets" id="max_tweets" class="form-control" placeholder="Max # of tweets" value="500">
+</div>
+
+<div class="form-group">
+  <textarea class="form-control" name="metric_description" placeholder="Description"></textarea>
+</div>

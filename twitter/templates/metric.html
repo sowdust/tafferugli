@@ -22,7 +22,6 @@ table_functions(searching=true,paging=true);
 				{{ metric.name }}
 			</div>
 			<div class="card-body">
-
                 <p>{{ metric.description }}</p>
                 <p>{{ metric.custom_description }}</p>
 				<ul class="list-group list-group-flush">
@@ -83,15 +82,39 @@ table_functions(searching=true,paging=true);
 			Tagged users
 		</div>
 		<div class="card-body">
-
         {{ metric.tagged_tweets.all | tweets_table:True }}
-
-
-
 		</div>
 	</div>
 </div>
 {% endif %}
+
+
+{% if metric.communities.exists %}
+<div class="row">
+		<div class="col-12">
+		<div class="card">
+				<div class="card-header">
+					Computed communities
+				</div>
+				<div class="card-body">
+
+				   <div class="list-group list-group-flush">
+				   {% for community in metric.communities.all %}
+						 <a data-toggle="collapse" href="#community-{{ community.id }}"  class="list-group-item list-group-item-action">
+							 <abbr title="{{ community.description }}"> {{ community.name }} </abbr>
+							 <span class="badge badge-primary badge-pill">{{community.twitter_users.count}}</span></a>
+						 <div id ="community-{{ community.id }}" class="collapse list-group">
+							 {{ community.twitter_users.all|twitter_users_table }}
+						 </div>
+				   {% endfor %}
+				</div>
+			</div>
+		</div>
+		</div>
+</div>
+{% endif %}
+
+
 
 
 {% endblock %}

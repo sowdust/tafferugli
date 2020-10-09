@@ -102,9 +102,9 @@ $("#graph_image").ready(function(){
 					<p>The following communities were automatically computed by a <a href="javascript:;" onclick="javascript:link_external_website('https://graph-tool.skewed.de/static/doc/inference.html#graph_tool.inference.minimize.minimize_blockmodel_dl')">"community identification algorithm"</a></p>
 				   <div class="list-group list-group-flush">
 				   {% for community in metric.communities.all %}
-						 <a data-toggle="collapse" href="#community-{{ community.community_id }}"  class="list-group-item list-group-item-action">
+						 <a data-toggle="collapse" href="#community-{{ community.id }}"  class="list-group-item list-group-item-action">
 							 {{ community.name }} <span class="badge badge-primary badge-pill">{{community.twitter_users.count}}</span></a>
-						 <div id ="community-{{ community.community_id }}" class="collapse list-group">
+						 <div id ="community-{{ community.id }}" class="collapse list-group">
 							 {{ community.twitter_users.all|twitter_users_table }}
 						 </div>
 

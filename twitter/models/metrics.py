@@ -7,13 +7,14 @@ from pylab import *
 from graph_tool.all import *
 from svglib.svglib import svg2rlg
 from reportlab.graphics import renderPM
+from difflib import SequenceMatcher
 
 from django.db.models import Avg, StdDev, Func, Q, F
 from django.db.models.functions import TruncDay, Coalesce, Extract
 from django.utils.safestring import mark_safe
 
 from .models import *
-from .operations import OperationConstructNetwork
+from .operations import OperationConstructNetwork, OperationRetrieveTweets
 
 
 class MetricDefaultProfilePicture(Metric):
@@ -679,7 +680,11 @@ class MetricGraphCommunityNetwork(Metric):
             [operation, created] = OperationConstructNetwork.objects.get_or_create(campaign=self.campaign,metric=self)
             if created:
                 logger.debug('Created operation %s' % operation)
-                operation.set_target(self.twitter_users, campaign_slug=self.campaign, metric=self)
+                operation.set_target(self.twitter_users)
+                operation.max_twitter_users = self.max_twitter_users
+                operation.max_friends = self.max_friends
+                operation.max_followers = self.max_followers
+                operation.save()
                 operation.run()
             # If we are still retrieving the community graph, reschedule metric
             sleeptime = 10
@@ -772,3 +777,97 @@ class MetricGraphCommunityNetwork(Metric):
             jsonpkg.dump(data, j)
 
         return True
+
+
+class MetricActivityPattern(Metric):
+    target_type = Metric.TARGET_USERS
+    description = 'Find users that have a similar activity pattern'
+    #template_file = 'metrics/MetricActivityPattern.html'
+    template_form = 'metrics/forms/MetricActivityPattern.html'
+    similarity_threshold = models.PositiveSmallIntegerField(
+        default=5, help_text='Minimum length of longest common substring to classify "similar" activity')
+    days_interval = models.PositiveSmallIntegerField(default=10)
+    retrieve_tweets = models.BooleanField(default=True,
+                                          help_text='Use Twitter APIs to download tweets')
+    max_twitter_users = models.IntegerField(
+        default=5000, help_text='Don\' tun the metrics if users are more than this number')
+    max_tweets = models.IntegerField(
+        default=500, help_text='Get at most this number of tweets per user')
+
+    def set_params_from_req(self, post_dict):
+        self.name = post_dict['metric_name']
+        self.custom_description = post_dict['metric_description']
+        self.max_twitter_users = int(post_dict['max_twitter_users'])
+        self.days_interval = int(post_dict['days_interval'])
+        self.max_tweets = int(post_dict['max_tweets'])
+        self.similarity_threshold = int(post_dict['similarity_threshold'])
+        self.retrieve_tweets = True if post_dict['retrieve_tweets'] == 'true' else False
+        self.save()
+
+    def _computation(self):
+        if self.twitter_users.count() > self.max_twitter_users:
+            logger.error('Too many users %d (max: %d)' % (self.twitter_users.count(), self.max_twitter_users))
+            return False
+
+        if self.retrieve_tweets:
+            [operation, created] = OperationRetrieveTweets.objects.get_or_create(campaign=self.campaign,metric=self)
+            if created:
+                logger.debug('Created operation %s' % operation)
+                operation.set_target(self.twitter_users)
+                operation.max_tweets = self.max_tweets
+                operation.max_twitter_users = self.max_twitter_users
+                operation.days_interval = self.days_interval
+                operation.save()
+                operation.run()
+            # If we are still retrieving tweets, reschedule metric
+            sleeptime = 10
+            logger.debug('Sleeping %d seconds' % sleeptime)
+            time.sleep(sleeptime)
+            with transaction.atomic():
+                op = OperationRetrieveTweets.objects.select_for_update().get(pk=operation.id)
+                if op and not op.is_finished():
+                    logger.debug('Still getting tweets...')
+                    backoff = timedelta(minutes=15)
+                    self.compute(schedule=backoff, start=False)
+                    return False
+
+        sequences = []
+        uids = []
+        for user in self.twitter_users.all():
+            sequences.append(user.get_sequence_string())
+            uids.append(user.id_int)
+            logger.debug(user.get_sequence_string())
+
+        # will store all matches longer than threshold and relative users
+        patterns = {}
+        for i in range(0,len(sequences)-1):
+            for j in range(i+1, len(sequences)):
+                logger.debug('Computing similarity between %d and %d' % (uids[i], uids[j]))
+                match = SequenceMatcher(None, sequences[i], sequences[j], autojunk=False).find_longest_match(0, len(sequences[i]), 0, len(sequences[j]))
+                if match.size >= self.similarity_threshold:
+                    u_i = self.twitter_users.get(pk=uids[i])
+                    u_j = self.twitter_users.get(pk=uids[j])
+                    pattern = sequences[i][match.a: match.a + match.size]
+                    if pattern in patterns.keys():
+                        patterns[pattern].append(u_j, u_i)
+                    else:
+                        patterns[pattern] = [u_j, u_i]
+                    self.tagged_users.add(u_i)
+                    self.tagged_users.add(u_j)
+                    logger.debug('Found similar activity between %s and %s: %s' % (
+                        u_i.screen_name, u_j.screen_name, pattern))
+
+        logger.debug('Creating communities')
+        for p in patterns:
+            community = Community(metric=self)
+            community.campaign = self.campaign
+            community.description = 'Users with activity pattern %s' % (p)
+            community.name = 'Activity pattern community of length %d' % len(p)
+            users = set(patterns[p])
+            logger.debug('adding users to community %s' % p)
+            logger.debug(users)
+            community.save()
+            community.twitter_users.set(users)
+
+        return True
+

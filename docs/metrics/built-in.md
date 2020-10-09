@@ -156,3 +156,14 @@ Similarly as above, creates a directed **graph** of users, based on their accoun
 **Please note:** this metric uses Twitter API to retrieve followers and friends of any given user. This API method is **strongly limited** by Twitter; as a result, this metric can take a very long time to execute. It is suggested to run this metric only on limited subsets of users.
 
 It might help, among other things, in visually identify strongly connected communities that *might be* coordinated accounts. 
+
+
+### MetricActivityPattern
+
+Target: Users
+
+Creates a pattern of activity in the form of a sequence of characters for each user, based on their tweet types (original, retweet, reply, quote).
+
+Compares the activity pattern string in order to find the longest common substring for each couple of users. If the substring is longer than the threshold set, users are tagged for having a similar activity pattern.
+
+Communities of users having the same longest substring are created. 
