@@ -832,7 +832,7 @@ class TwitterUser(models.Model):
     followers_filled = models.DateTimeField(null=True)
     friends = models.ManyToManyField('TwitterUser', blank=True, related_name='friended_by')
     friends_filled = models.DateTimeField(null=True)
-    tweets_filled = models.DateTimeField(null=True)
+    tweets_filled_date = models.DateTimeField(null=True)
     favorite = models.ManyToManyField('Tweet', blank=True, related_name='favorites')
     favorite_filled = models.BooleanField(default=False)
     triggering_entity = models.ManyToManyField('Entity', blank=True)  # TODO: remove

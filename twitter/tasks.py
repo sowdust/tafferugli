@@ -247,12 +247,12 @@ def get_tweets(campaign_slug, twitter_users, max_tweets=0, operation_id=-1, days
 
     for uid in twitter_users:
         user = TwitterUser.objects.get(pk=uid)
-        if (user.tweets_filled is None or ((timezone.now() - user.tweets_filled) > timedelta(days=days_interval))):
+        if (user.tweets_filled_date is None or ((timezone.now() - user.tweets_filled_date) > timedelta(days=days_interval))):
             logger.debug('Getting tweets for user %s (%s)' % (user.screen_name, user.id_str))
             counter = 0
             for status in limit_handled(tweepy.Cursor(api.user_timeline, user_id=uid, count=max_tweets).items()):
                 tweet = Tweet.from_status(status)
-                user.tweets_filled = timezone.now()
+                user.tweets_filled_date = timezone.now()
                 user.save()
                 logger.debug('\t[%s] %s' % (tweet.id_str,tweet.text))
                 counter += 1
