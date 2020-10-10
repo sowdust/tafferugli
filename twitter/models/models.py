@@ -597,7 +597,7 @@ class List(models.Model):
     campaign = models.ForeignKey('Campaign', on_delete=models.CASCADE, null=True, related_name='lists')
     tweets = models.ManyToManyField('Tweet', blank=True)
     twitter_users = models.ManyToManyField('TwitterUser', blank=True)
-    public = models.BooleanField(default=True)
+    public = models.BooleanField(default=False)
     type = models.CharField(
         max_length=2,
         choices=TYPE_CHOICES,

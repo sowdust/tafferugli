@@ -408,13 +408,11 @@ def _get_dashboard_data(campaign, tweet_ids=None):
             distribution_metric = MetricTweetTimeDistribution.objects.filter(
                 campaign=campaign, campaign_wide=True).order_by('-computation_end')[0]
         except Exception as ex:
-            logger.debug(ex)
             distribution_metric = None
         try:
             tweet_graph_metric = MetricGraphTweetNetwork.objects.filter(
                 campaign=campaign, campaign_wide=True).order_by('-computation_end')[0]
         except Exception as ex:
-            logger.debug(ex)
             tweet_graph_metric = None
     else:
         # dashboard on a selected set of tweets
@@ -577,6 +575,8 @@ def metric_compute(request):
 @require_http_methods(['GET'])
 def metric_detail(request, metric_id):
     metric = Metric.objects.get_subclass(pk=metric_id)
+    if not metric.campaign.active and not request.user.is_authenticated:
+        raise Http404()
     context = {'metric': metric}
     return render(request, metric.template_file, context)
 
@@ -906,12 +906,16 @@ def domain(request, hostname):
 
 def graph(request, id):
     graph = get_object_or_404(CommunityGraph, pk=id)
+    if not graph.metric.campaign.active and not request.user.is_authenticated:
+        raise Http404()
     context = {'graph': graph}
     return render(request, 'graph.html', context)
 
 
 def community(request, community_id):
     community = get_object_or_404(Community, pk=community_id)
+    if not community.campaign.active and not request.user.is_authenticated:
+        raise Http404()
     context = {'community': community}
     return render(request, 'community.html', context)
 
