@@ -537,14 +537,17 @@ class MetricGraphTweetNetwork(Metric):
         for i in range(len(user_attributes)):
             indexes[user_attributes[i][0]] = i
             v = g.add_vertex()
-            # v_id_str[v] = user_attributes[i][0]
-            # v_screen_name[v] = user_attributes[i][1]
-            # v_name[v] = user_attributes[i][2]
+            v_id_str = {}
+            v_screen_name = {}
+            v_name = {}
+            v_id_str[v] = user_attributes[i][0]
+            v_screen_name[v] = user_attributes[i][1]
+            v_name[v] = user_attributes[i][2]
 
         # save properties as internal in graph
-        # g.vertex_properties['id_str'] = v_id_str
-        # g.vertex_properties['screen_name'] = v_screen_name
-        # g.vertex_properties['name'] = v_name
+        g.vertex_properties['id_str'] = v_id_str
+        g.vertex_properties['screen_name'] = v_screen_name
+        g.vertex_properties['name'] = v_name
 
         # add PropertyMap to store weights
         eprop = g.new_edge_property('int')
