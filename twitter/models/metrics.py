@@ -526,9 +526,9 @@ class MetricGraphTweetNetwork(Metric):
 
         # create a graph
         g = Graph(directed=True)
-        # v_id_str = g.new_vertex_property("string")
-        # v_screen_name = g.new_vertex_property("string")
-        # v_name = g.new_vertex_property("string")
+        v_id_str = g.new_vertex_property("string")
+        v_screen_name = g.new_vertex_property("string")
+        v_name = g.new_vertex_property("string")
 
         # dictionary to keep track of vertex index and its related id_str
         indexes = {}
@@ -537,9 +537,6 @@ class MetricGraphTweetNetwork(Metric):
         for i in range(len(user_attributes)):
             indexes[user_attributes[i][0]] = i
             v = g.add_vertex()
-            v_id_str = {}
-            v_screen_name = {}
-            v_name = {}
             v_id_str[v] = user_attributes[i][0]
             v_screen_name[v] = user_attributes[i][1]
             v_name[v] = user_attributes[i][2]
