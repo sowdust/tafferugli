@@ -2,6 +2,29 @@ var process_response = function(result) {
     $('#ajax_messages').html(result['messages']);
 }
 
+var reverse_link = function(url, service) {
+    var yandex = 'https://yandex.com/images/search?rpt=imageview&url=';
+    var google = 'https://www.google.com/searchbyimage?image_url=';
+    var tineye = 'https://www.tineye.com/search?url=';
+
+    if(url.startsWith('/')) {
+        url = window.location.origin + url;
+    } else {
+        url = window.location.origin + '/' + url;
+    }
+    if (service == 'Y') {
+        url = yandex + encodeURIComponent(url);
+    }else if (service == 'G') {
+        url = google + encodeURIComponent(url);
+    }else if (service == 'T'){
+        url = tineye + encodeURIComponent(url);
+    }else{
+        return false;
+    }
+
+    window.open(url);
+}
+
 var update_counter = function(div,what,object_type,object_id) {
     var url = '/ajax/count/';
     $.ajax({

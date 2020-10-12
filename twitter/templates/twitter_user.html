@@ -88,6 +88,12 @@ prepare_tags(url_tag_add,url_tag_list,url_tag_remove,object_type,object_id,pre_p
       <img class="card-img-top" src="{{ twitter_user.get_profile_picture | profile_image_resize }}" alt="{{ twitter_user.screen_name}} current profile picture">
     </div>
     <div>
+      <div class="btn-group btn-block" role="group">
+        <button class="btn btn-success">Reverse image search:</button>
+        <button class="btn btn-secondary" onclick="reverse_link('{{ twitter_user.get_profile_picture }}', 'Y')">Yandex</button>
+        <button class="btn btn-dark" onclick="reverse_link('{{ twitter_user.get_profile_picture }}', 'G')">Google</button>
+        <button class="btn btn-secondary" onclick="reverse_link('{{ twitter_user.get_profile_picture }}', 'T')">Tineye</button>
+      </div>
       <a href="#TweetsTable" class="btn btn-outline-success btn-block">Go to Tweets</a>
       <button type="button" class="btn btn-outline-danger btn-block" id="update_user">Update user via API</button>
     </div>
