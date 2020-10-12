@@ -85,7 +85,7 @@ prepare_tags(url_tag_add,url_tag_list,url_tag_remove,object_type,object_id,pre_p
 <div class="row">
   <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
     <div class="card">
-      <img class="card-img-top" src="{{ twitter_user.get_profile_picture | profile_image_resize }}" alt="{{ twitter_user.screen_name}} current profile picture">
+      <img class="card-img-top" src="{{ twitter_user.get_profile_picture | profile_image_resize }}" alt="{{ twitter_user.screen_name }} current profile picture">
     </div>
     <div>
       <div class="btn-group btn-block" role="group">
@@ -95,7 +95,9 @@ prepare_tags(url_tag_add,url_tag_list,url_tag_remove,object_type,object_id,pre_p
         <button class="btn btn-secondary" onclick="reverse_link('{{ twitter_user.get_profile_picture }}', 'T')">Tineye</button>
       </div>
       <a href="#TweetsTable" class="btn btn-outline-success btn-block">Go to Tweets</a>
+      <a href="javascript:;" onclick="javascript:link_external_website('https://app.truthnest.com/analysis-results/user/{{ twitter_user.screen_name }}')" class="btn btn-outline-info btn-block">Analyze user on ThruthNest</a>
       <button type="button" class="btn btn-outline-danger btn-block" id="update_user">Update user via API</button>
+
     </div>
       <div class="pt-4">
           <h4>Tags</h4>
