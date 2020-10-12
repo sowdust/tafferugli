@@ -958,9 +958,6 @@ class TwitterUser(models.Model):
                 return self.profile_picture.url
         return ''
 
-    def get_profile_picture_abs(self):
-        return
-
     def add_fact(self, metric, text, description=None):
         fact = Fact(
             twitter_user=self,
