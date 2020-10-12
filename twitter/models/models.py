@@ -949,8 +949,8 @@ class TwitterUser(models.Model):
             if response.status_code == 200:
                 try:
                     ext = self.profile_image_url_https.split('.')[-1]
-                    ext = ext if ext.lower() in ['.jpg', 'png', 'gif'] else '.jpg'
-                    filename = '%s.%s' % (uuid.uuid4(), ext)
+                    ext = ext if ext.lower() in ['.jpg', '.png', '.gif'] else '.jpg'
+                    filename = '%s%s' % (uuid.uuid4(), ext)
                 except Exception as ex:
                     logger.debug(ex)
                     filename = str(uuid.uuid4())
