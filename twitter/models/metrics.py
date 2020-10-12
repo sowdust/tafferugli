@@ -33,7 +33,7 @@ class MetricDefaultProfilePicture(Metric):
             profile_image_url_https='https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png')
         self.tagged_users.set(default_img_users)
         def_image_users_count = default_img_users.count()
-        percentage = (decimal.Decimal(def_image_users_count) / decimal.Decimal(tot_users))
+        percentage = (decimal.Decimal(def_image_users_count) / decimal.Decimal(tot_users)) * 100
         self.value = percentage
         for t in self.tagged_users.all():
             t.add_fact(self, 'Default Profile Picture', 'User has the default profile picture')
@@ -60,7 +60,7 @@ class MetricDuplicateTweet(Metric):
         not_retweets = self.tweets.filter(retweeted_status__isnull=True).distinct()
         duplicates = not_retweets.values('text').annotate(Count('id_int')).order_by().filter(id_int__count__gt=1)
         self.tagged_tweets.set(self.tweets.filter(text__in=[tweet['text'] for tweet in duplicates]))
-        percentage = decimal.Decimal(duplicates.count()) / decimal.Decimal(not_retweets.count())
+        percentage = decimal.Decimal(duplicates.count()) / decimal.Decimal(not_retweets.count()) * 100
         self.value = percentage
         for t in self.tagged_tweets.all():
             t.add_fact(self, 'Duplicate tweet', 'There is at least another tweet with the same text')
@@ -83,7 +83,7 @@ class MetricDefaultTwitterProfile(Metric):
     def _computation(self):
         default_profile_users = self.twitter_users.filter(default_profile=True)
         self.tagged_users.set(default_profile_users)
-        percentage = decimal.Decimal(default_profile_users.count()) / decimal.Decimal(self.twitter_users.count())
+        percentage = decimal.Decimal(default_profile_users.count()) / decimal.Decimal(self.twitter_users.count()) * 100
         self.value = percentage
         for t in self.tagged_users.all():
             t.add_fact(self, 'Default Profile', 'User did not customize profile colors nor cover image')
@@ -123,7 +123,7 @@ class MetricRecentCreationDate(Metric):
         else:
             recently_created = self.twitter_users.filter(
                 created_at__gte=F('inserted_at') - timedelta(days=self.days_interval))
-        percentage = decimal.Decimal(recently_created.count()) / decimal.Decimal(self.twitter_users.count())
+        percentage = decimal.Decimal(recently_created.count()) / decimal.Decimal(self.twitter_users.count()) * 100
         self.tagged_users.set(recently_created)
         self.value = percentage
         # add facts
@@ -291,7 +291,7 @@ class MetricUsernameWithRegex(Metric):
     def _computation(self):
         target = self.twitter_users.filter(screen_name__regex=self.regex)
         self.tagged_users.set(target)
-        percentage = decimal.Decimal(self.tagged_users.count()) / decimal.Decimal(self.twitter_users.count())
+        percentage = decimal.Decimal(self.tagged_users.count()) / decimal.Decimal(self.twitter_users.count()) * 100
         self.value = percentage
 
         for t in self.tagged_users.all():
