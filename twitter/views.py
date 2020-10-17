@@ -688,7 +688,7 @@ def twitter_user_graph_detail(request):
         if twitter_user.created_at:
             info['created_at'] = twitter_user.created_at.strftime('%d %b %Y')
         info['inserted_at'] = twitter_user.inserted_at.strftime('%d %b %Y')
-        info['tweets_seen'] = twitter_user.tweets.count()
+        info['tweets_seen'] = twitter_user.get_tweets_count()
         info['statuses_count'] = twitter_user.statuses_count
         info['profile_pic_url'] = twitter_user.get_profile_picture()
     t['info'] = info

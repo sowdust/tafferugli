@@ -870,6 +870,11 @@ class TwitterUser(models.Model):
         self.tweets = Tweet.objects.filter(author=self).distinct()
         return self.tweets
 
+    def get_tweets_count(self):
+        if self.tweets:
+            return self.tweets.count()
+        return Tweet.approx.filter(author=self).distinct().count()
+
     def get_sequence(self):
         """ Returns a list of dictionaries indicating the type of tweet (reply, retweet...) and its datetime """
         if self.tweets:
