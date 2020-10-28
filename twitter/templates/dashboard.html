@@ -268,7 +268,8 @@ $(document).ready(function(){
 						<h5 class="p-3">URLs</h5>
 						<div class="overflow-list">
 							{% for url in urls %}
-								<span class="text-muted">[{{url.counter}}]</span> <a href="{% url 'domain' url.hostname %}" title="{{ url.expanded_url }}">{{ url.expanded_url|truncatechars:32 }}</a><br>
+								<span class="text-muted">[{{url.counter}}]</span>
+								<a href="{{ url.get_absolute_url }}" title="{{ url.expanded_url }}">{{ url.expanded_url|truncatechars:32 }}</a><br>
 							{% endfor %}
 						</div>
 
