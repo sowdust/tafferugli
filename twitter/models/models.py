@@ -1294,20 +1294,25 @@ class Tweet(models.Model):
     @staticmethod
     def get_attributes_from_id(id_str):
         ## From: github.com/pjh-github/Tweet_ID_Interpreter/blob/master/TweetIDProfiler.py
-        ## Output: [timestamp datacentrenum servernum sequencenum] 
-        tweetID = int(id_str)
-        binaryID = bin(tweetID)
-        ## Get the components
-        binaryID = binaryID[2:len(binaryID)]
-        dec_time = (tweetID >> 22) + 1288834974657
-        fromid_timestamp = timezone.make_aware(datetime.fromtimestamp(dec_time / 1000))
-        datacentre = binaryID[39:39 + 5]
-        fromid_datacentrenum = int(datacentre, 2)
-        server = binaryID[39 + 5:39 + 10]
-        fromid_servernum = int(server, 2)
-        sequence = binaryID[39 + 10:39 + 22]
-        fromid_sequencenum = int(sequence, 2)
-        return [fromid_timestamp, fromid_datacentrenum, fromid_servernum, fromid_sequencenum]
+        ## Output: [timestamp datacentrenum servernum sequencenum]
+        try:
+            tweetID = int(id_str)
+            binaryID = bin(tweetID)
+            ## Get the components
+            binaryID = binaryID[2:len(binaryID)]
+            dec_time = (tweetID >> 22) + 1288834974657
+            fromid_timestamp = timezone.make_aware(datetime.fromtimestamp(dec_time / 1000))
+            datacentre = binaryID[39:39 + 5]
+            fromid_datacentrenum = int(datacentre, 2)
+            server = binaryID[39 + 5:39 + 10]
+            fromid_servernum = int(server, 2)
+            sequence = binaryID[39 + 10:39 + 22]
+            fromid_sequencenum = int(sequence, 2)
+            return [fromid_timestamp, fromid_datacentrenum, fromid_servernum, fromid_sequencenum]
+        except Exception as ex:
+            logger.error('Could not read attributes from id %s' % id_str)
+            logger.error(ex)
+            return [timezone.now(), 0, 0, 0]
 
     def __str__(self):
         if self.text:
