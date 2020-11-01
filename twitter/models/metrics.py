@@ -849,7 +849,7 @@ class MetricActivityPattern(Metric):
                     u_j = self.twitter_users.get(pk=uids[j])
                     pattern = sequences[i][match.a: match.a + match.size]
                     if pattern in patterns.keys():
-                        patterns[pattern].append(u_j, u_i)
+                        patterns[pattern].append([u_j, u_i])
                     else:
                         patterns[pattern] = [u_j, u_i]
                     self.tagged_users.add(u_i)
