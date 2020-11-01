@@ -17,6 +17,7 @@ urlpatterns = [
     path('entity/<slug:slug>/', views.entity, name='entity'),
     path('campaign/', views.campaigns, name='campaigns'),
     path('campaign/<slug:campaign_slug>/', views.campaign, name='campaign'),
+    path('campaign/<slug:campaign_slug>/datacenter/<int:data_center>/', views.campaign_datacenter, name='campaign_datacenter'),
     path('manage/', views.manage_index, name='manage_index'),
     path('manage/twitter_accounts/', views.manage_twitter_accounts, name='manage_twitter_accounts'),
     path('manage/streamers/', views.manage_streamers, name='manage_streamers'),

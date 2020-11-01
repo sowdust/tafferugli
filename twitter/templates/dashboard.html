@@ -84,8 +84,11 @@ $(document).ready(function(){
         </h6>
         <ul class="flex-column nav">
 			<li class="nav-item"><span class="nav-link"><span class="text-muted">#tweets:</span> {{ tweets.count }}</span></li>
-			<li class="nav-item"><span class="nav-link"><span class="text-muted">
-				<a href="{% url 'view_selection' 'tweets' %}">View list or compute metrics</a>
+			<li class="nav-item"><span class="nav-link">
+				<a href="#TweetsTable">See tweets</a>
+			</span></li>
+			<li class="nav-item"><span class="nav-link">
+				<a href="{% url 'view_selection' 'tweets' %}">Compute metrics on selected tweets</a>
 			</span></li>
 		</ul>
 	
@@ -301,6 +304,10 @@ $(document).ready(function(){
 	{{ d | distribution_chart }}
 {% endfor %}
 
+
+{% if tweets.exists %}
+{{ tweets | tweets_table }}
+{% endif %}
 
 {% endblock %}
 

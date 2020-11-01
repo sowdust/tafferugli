@@ -467,7 +467,8 @@ def _get_dashboard_data(campaign, tweet_ids=None):
         'tweet_graph_metric': tweet_graph_metric,
         'domains': domains,
         'available_metrics': available_metrics,
-        'sources_counted': sources_counted
+        'sources_counted': sources_counted,
+        'tweets': tweets
     }
     return context
 
@@ -495,6 +496,16 @@ def campaign(request, campaign_slug):
         raise Http404()
     context = _get_dashboard_data(campaign=campaign)
     return render(request, 'campaign.html', context)
+
+
+@require_http_methods(['GET'])
+def campaign_datacenter(request, campaign_slug, data_center):
+    campaign = get_object_or_404(Campaign, slug=campaign_slug)
+    if not campaign.active and not request.user.is_authenticated:
+        raise Http404()
+    tweets = list(campaign.get_tweets().filter(fromid_datacentrenum=data_center).values_list('id_int', flat=True))
+    context = _get_dashboard_data(campaign=campaign.id, tweet_ids=tweets)
+    return render(request, 'dashboard.html', context)
 
 
 @csrf_protect
