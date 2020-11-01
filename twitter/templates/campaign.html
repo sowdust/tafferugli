@@ -136,7 +136,9 @@ $(document).ready(function(){
         </h6>
         <ul class="flex-column nav">
 		{% for d in data_centers.all %}
-			<li class="nav-item"><span class="nav-link">{{ d.fromid_datacentrenum }} <span class="text-muted">[{{d.counter}}]</span></span></li>
+			<li class="nav-item"><span class="nav-link">
+				<a href="{% url 'campaign_datacenter' campaign.slug d.fromid_datacentrenum %}"> {{ d.fromid_datacentrenum }} </a>
+				<span class="text-muted">[{{d.counter}}]</span></span></li>
 		{% endfor %}
 		</ul>
 
