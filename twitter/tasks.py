@@ -117,7 +117,7 @@ def limit_handled(cursor, window_limit=15):
             if ex.api_code == 34:
                 logger.warning('Cannot retrieve data for user. He was probably removed')
                 break
-            elif ex.reason == "Not authorized.":
+            elif ex.reason == "Not authorized." or "401" in str(ex):
                 logger.warning('Not authorized. Account might be private or suspended')
                 break
             else:
