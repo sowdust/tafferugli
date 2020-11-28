@@ -1462,14 +1462,17 @@ class CommunityGraph(models.Model):
     def delete_graph(sender, instance, **kwargs):
         # Don't know why it gets called on Task as well...
         if isinstance(instance,CommunityGraph):
-            logger.info('[*] Deleting file %s' % instance.svg.file)
-            instance.svg.delete(save=False)
-            logger.info('[*] Deleting file %s' % instance.png.file)
-            instance.png.delete(save=False)
-            logger.info('[*] Deleting file %s' % instance.xml.file)
-            instance.xml.delete(save=False)
-            logger.info('[*] Deleting file %s' % instance.json.file)
-            instance.json.delete(save=False)
+            try:
+                logger.info('[*] Deleting file %s' % instance.svg.file)
+                instance.svg.delete(save=False)
+                logger.info('[*] Deleting file %s' % instance.png.file)
+                instance.png.delete(save=False)
+                logger.info('[*] Deleting file %s' % instance.xml.file)
+                instance.xml.delete(save=False)
+                logger.info('[*] Deleting file %s' % instance.json.file)
+                instance.json.delete(save=False)
+            except Exception as ex:
+                logger.error('Cannot remove graph files: %s' % ex)
 
     def get_absolute_url(self):
         return reverse('graph', args=[self.id])
