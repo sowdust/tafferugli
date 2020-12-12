@@ -87,6 +87,8 @@ class MyStreamListener(tweepy.StreamListener):
             except tweepy.error.TweepError as ex:
                 if ex.api_code == 179:
                     logger.warning('Cannot retrieve status %s. Not authorized' % status.in_reply_to_status_id_str)
+                if ex.api_code == 144:
+                    logger.warning('Tweet with id %s does not exist' % status.in_reply_to_status_id_str)
                 elif ex.reason == "Not authorized.":
                     logger.warning('Not authorized. Account might be private or suspended')
                 else:
@@ -1223,6 +1225,8 @@ class Tweet(models.Model):
                     except tweepy.error.TweepError as ex:
                         if ex.api_code == 179:
                             logger.warning('Cannot retrieve status %s. Not authorized' % in_reply_to_status_id_str)
+                        if ex.api_code == 144:
+                            logger.warning('Tweet with id %s does not exist' % status.in_reply_to_status_id_str)
                         elif ex.reason == "Not authorized.":
                             logger.warning('Not authorized. Account might be private or suspended')
                         else:
