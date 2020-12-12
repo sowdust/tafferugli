@@ -383,7 +383,7 @@ class Streamer(models.Model):
         choices=TYPE_CHOICES,
         default=TRACK)
     entities = models.ManyToManyField('Entity')
-    campaign = models.ForeignKey('Campaign', on_delete=models.SET_NULL, null=True, related_name='streamers')
+    campaign = models.ForeignKey('Campaign', on_delete=models.CASCADE, null=True, related_name='streamers')
     created_at = models.DateTimeField(auto_now_add=True)
     started_at = models.DateTimeField(null=True, blank=True)
     timeout_seconds = models.PositiveIntegerField(null=True, blank=True)
