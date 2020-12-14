@@ -207,6 +207,55 @@ $(document).ready(function(){
 </div>
 
 
+
+{% if tweet.original_retweeted.exists %}
+{% with retweets=tweet.original_retweeted.all %}
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">Retwees ({{ retweets.count }})</div>
+            <div class="card-body">
+                {{ retweets | tweets_table }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endwith %}
+{% endif %}
+
+{% if tweet.original_quoted.exists %}
+{% with quotes=tweet.original_quoted.all %}
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">Quotes ({{ quotes.count }})</div>
+            <div class="card-body">
+                {{ quotes | tweets_table }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endwith %}
+{% endif %}
+
+
+{% if tweet.replies.exists %}
+{% with replies=tweet.replies.all %}
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">Replies ({{ replies.count }})</div>
+            <div class="card-body">
+                {{ replies | tweets_table }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endwith %}
+{% endif %}
+
+
+
 {% endblock %}
 
 
