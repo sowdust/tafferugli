@@ -1424,8 +1424,8 @@ class Hashtag(models.Model):
 
 class URL(models.Model):
     tags = TaggableManager()
-    expanded_url = models.CharField(max_length=255)
-    url = models.CharField(max_length=255, null=True)
+    expanded_url = models.CharField(max_length=2048)
+    url = models.CharField(max_length=2048, null=True)
     display_url = models.CharField(max_length=255, null=True)
     hostname = models.CharField(max_length=255, null=True)
     triggering_entity = models.ManyToManyField('Entity', blank=True)
