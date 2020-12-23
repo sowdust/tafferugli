@@ -230,6 +230,16 @@ def index(request):
     # return render(request, 'index.html', {})
 
 
+@require_http_methods(['GET'])
+def robots(request):
+    robots = [
+        'User-agent: *',
+        'Allow: /$',
+        'Disallow: /',
+    ]
+    return HttpResponse('\n'.join(robots), content_type='text/plain')
+
+
 def forbidden(request):
     return render(request, 'forbidden.html', {})
 

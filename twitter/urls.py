@@ -5,6 +5,7 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('robots.txt', views.robots, name='robots'),
     path('forbidden/', views.forbidden, name='forbidden'),
     path('streamer/', views.streamers, name='streamers'),
     path('streamer/<int:id>/', views.streamer, name='streamer'),
