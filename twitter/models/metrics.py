@@ -2,6 +2,8 @@ import decimal
 import statistics
 import json as jsonpkg
 from datetime import timedelta
+import tempfile, os
+os.environ['MPLCONFIGDIR'] = tempfile.mkdtemp()
 
 from pylab import *
 from graph_tool.all import *
