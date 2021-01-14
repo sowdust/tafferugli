@@ -635,7 +635,7 @@ class Metric(models.Model):
     custom_description = models.TextField(default='', help_text='User description of the metric')
     # TODO manage different kind of values
     impact = models.DecimalField(default=0, max_digits=11, decimal_places=10)
-    value = models.DecimalField(default=1, max_digits=11, decimal_places=10)
+    value = models.DecimalField(default=1, max_digits=13, decimal_places=10)
     attendibility = models.DecimalField(default=0, max_digits=11, decimal_places=10)
     computation_start = models.DateTimeField(null=True, blank=True)
     computation_end = models.DateTimeField(null=True, blank=True)
