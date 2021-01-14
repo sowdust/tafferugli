@@ -18,7 +18,6 @@ from django.utils.safestring import mark_safe
 from .models import *
 from .operations import OperationConstructNetwork, OperationRetrieveTweets
 
-matplotlib.use('Agg')
 
 class MetricDefaultProfilePicture(Metric):
     description = 'Find profiles that have a default profile picture'
