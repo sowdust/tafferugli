@@ -1,6 +1,6 @@
 import os
 
-TAFFERUGLI_VERSION = '0.2.3'
+TAFFERUGLI_VERSION = '0.2.5'
 
 # Settings for background tasks
 MAX_ATTEMPTS = 25
