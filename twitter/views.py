@@ -421,7 +421,9 @@ def _get_dashboard_data(campaign, tweet_ids=None):
             distribution_metric = None
         try:
             tweet_graph_metric = MetricGraphTweetNetwork.objects.filter(
-                campaign=campaign, campaign_wide=True).order_by('-computation_end')[0]
+                campaign=campaign,
+                campaign_wide=True,
+                computation_end__isnull=False).order_by('-computation_end')[0]
         except Exception as ex:
             tweet_graph_metric = None
     else:
@@ -439,7 +441,9 @@ def _get_dashboard_data(campaign, tweet_ids=None):
         distribution_metrics = MetricTweetTimeDistribution.objects.filter(
             tweets__in=tweets, campaign=campaign).order_by('-computation_end')
         tweet_graph_metrics = MetricGraphTweetNetwork.objects.filter(
-            tweets__in=tweets, campaign=campaign).order_by('-computation_end')
+            tweets__in=tweets,
+            campaign=campaign,
+            computation_end__isnull=False).order_by('-computation_end')
         for d in distribution_metrics:
             if d.tweets.count() == tweets.count():
                 distribution_metric = d
