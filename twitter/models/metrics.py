@@ -524,7 +524,7 @@ class MetricGraphTweetNetwork(Metric):
         json_file = ContentFile('', '%d.json' % self.id)
         svg_file = ContentFile('', '%d.svg' % self.id)
         png_file = ContentFile('', '%d.png' % self.id)
-        xml_file = ContentFile('', '%d.graphml.gz' % self.id)
+        xml_file = ContentFile('', '%d.graphml' % self.id)
         community_graph = CommunityGraph(metric=self, svg=svg_file, png=png_file, json=json_file, xml=xml_file)
         user_attributes = self.all_twitter_users.values_list('id_str', 'screen_name', 'name', 'created_at')
 
@@ -708,7 +708,7 @@ class MetricGraphCommunityNetwork(Metric):
         json_file = ContentFile('', 'community-%d.json' % self.id)
         svg_file = ContentFile('', 'community-%d.svg' % self.id)
         png_file = ContentFile('', 'community-%d.png' % self.id)
-        xml_file = ContentFile('', 'community-%d.graphml.gz' % self.id)
+        xml_file = ContentFile('', 'community-%d.graphml' % self.id)
         community_graph = CommunityGraph(
             metric=self, svg=svg_file, png=png_file, json=json_file, xml=xml_file)
 
