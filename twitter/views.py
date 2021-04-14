@@ -574,7 +574,7 @@ def metric_compute(request):
         metric.campaign_wide = True
         if metric.target_type in [Metric.TARGET_USERS, Metric.TARGET_BOTH]:
             target_users = campaign.get_twitter_users()
-        if metric.target_type in [Metric.TARGET_TWEETS, Metric.TARGET_BOTH]:
+        if metric.target_type in [Metric.TARGET_TWEETS, Metric.TARGET_BOTH, Metric.TARGET_ANY]:
             target_tweets = campaign.get_tweets()
     else:
         return _error('Target selection method not implemented')
