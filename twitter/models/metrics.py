@@ -477,7 +477,7 @@ def _add_edge(graph, n, m, weights, interaction_type=0):
 
 
 class MetricGraphTweetNetwork(Metric):
-    target_type = Metric.TARGET_TWEETS
+    target_type = Metric.TARGET_ANY
     template_file = 'metrics/MetricGraphTweetNetwork.html'
     description = 'Create a graph based on the interactions between tweets'
     all_tweets = models.ManyToManyField('Tweet', blank=True)
@@ -487,10 +487,12 @@ class MetricGraphTweetNetwork(Metric):
                              + ' it explode with irrelevant nodes')
 
     def set_target(self, twitter_users=None, tweets=None):
-        if twitter_users is not None:
-            raise Exception('Metric not yet implemented for users')
         super().set_target(twitter_users, tweets)
-        self.tweets.set(Tweet.objects.filter(pk__in=tweets).distinct())
+        if twitter_users is not None:
+            tweets = Tweet.objects.filter(author__in=twitter_users).distinct()
+            self.tweets.set(tweets)
+        else:
+            self.tweets.set(Tweet.objects.filter(pk__in=tweets).distinct())
         self.all_tweets.set(Tweet.objects.filter(
             Q(pk__in=tweets) | Q(retweeted_status__in=tweets) | Q(in_reply_to_tweet__in=tweets) | Q(
                 quoted_status__in=tweets) | Q(original_retweeted__in=tweets) | Q(original_quoted__in=tweets) | Q(

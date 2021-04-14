@@ -119,7 +119,7 @@ It might also be useful in identifying some scenarios (i.e.: tweets published du
 
 ### MetricGraphTweetNetwork
 
-Target: Tweets
+Target: Any
 
 Creates a **graph** of users based on their observed interactions within the target campaign: directed vertices between users are added when a user retweets, quotes, replies to or mentions another user.
 Specifically, for the direction of vertices it follows the method used by [F. Pierri, A. Artoni, S. Ceri](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0227821#sec002), although it considers users as nodes instead of their single tweets:
@@ -143,6 +143,9 @@ The graph can also be **explored interactively**, thanks to the [d3 library](htt
 It might be useful, among other things, in visually identifying communities that have a "strange" behaviour (e.g.: a set of accounts amplifying specific content that *might be* a symptom of coordinated behaviour).
 
 *The community identification algorithm is far from being satisfying. Although it will never be perfect and is thought mainly to make the graph prettier and more readable by assigning different colors to different nodes, there is room for a lot of improvement in the choice of the algorithm and parameters used in the community identification phase.*
+
+This metric can be called both on tweets as well as users; in the latter case, ALL tweets authored by target users (even not concerning the target campaign) will be set as target.
+This can be easily changed if necessary.
 
 
 ### MetricGraphCommunityNetwork

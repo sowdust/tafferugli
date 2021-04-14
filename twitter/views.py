@@ -560,7 +560,6 @@ def metric_compute(request):
     target_tweets = None
 
     if 'selection' == request.POST['target']:
-
         if 'uid' in request.POST.keys():
             target_users = request.POST.getlist('uid')
         if 'tweets' in request.POST.keys():
@@ -569,7 +568,7 @@ def metric_compute(request):
             return _error('Missing target users')
         if metric.target_type in [Metric.TARGET_TWEETS, Metric.TARGET_BOTH] and not target_tweets:
             return _error('Missing target tweets')
-        if metric.target_type == Metric.TARGET_ANY and (not target_tweets or not target_users):
+        if metric.target_type == Metric.TARGET_ANY and (not target_tweets and not target_users):
             return _error('Missing target tweets or users')
     elif 'whole_campaign' == request.POST['target']:
         metric.campaign_wide = True
