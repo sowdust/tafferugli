@@ -70,7 +70,7 @@ $("#graph_image").ready(function(){
 							<a href="{{ t.get_svg }}" class="btn btn-outline-success btn-block" target="_blank" role="button">Open image in new tab</a>
 							<a href="{{ t.get_absolute_url }}" class="btn btn-outline-success btn-block" target="_blank">Open interactive graph in new tab</a>
 							<a href="{{ t.get_json }}" class="btn btn-outline-success btn-block" download="{{ metric.name | slugify }}.json">Download JSON graph</a>
-							<a href="{{ t.get_xml }}"  class="btn btn-outline-success btn-block" download="{{ metric.name | slugify }}.graphml.gz">Download compressed GraphML</a>
+							<a href="{{ t.get_xml }}"  class="btn btn-outline-success btn-block" download="{{ metric.name | slugify }}.graphml">Download GraphML graph</a>
 							</div>
 						</div>
 					<div class="container" style="width:65%;height:100%">

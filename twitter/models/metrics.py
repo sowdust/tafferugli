@@ -526,13 +526,14 @@ class MetricGraphTweetNetwork(Metric):
         png_file = ContentFile('', '%d.png' % self.id)
         xml_file = ContentFile('', '%d.graphml.gz' % self.id)
         community_graph = CommunityGraph(metric=self, svg=svg_file, png=png_file, json=json_file, xml=xml_file)
-        user_attributes = self.all_twitter_users.values_list('id_str', 'screen_name', 'name')
+        user_attributes = self.all_twitter_users.values_list('id_str', 'screen_name', 'name', 'created_at')
 
         # create a graph
         g = Graph(directed=True)
         v_id_str = g.new_vertex_property("string")
         v_screen_name = g.new_vertex_property("string")
         v_name = g.new_vertex_property("string")
+        v_created_at = g.new_vertex_property("string")
 
         # dictionary to keep track of vertex index and its related id_str
         indexes = {}
@@ -544,11 +545,13 @@ class MetricGraphTweetNetwork(Metric):
             v_id_str[v] = user_attributes[i][0]
             v_screen_name[v] = user_attributes[i][1]
             v_name[v] = user_attributes[i][2]
+            v_created_at[v] = user_attributes[i][3].strftime('%Y-%m-%d %H:%M')
 
         # save properties as internal in graph
         g.vertex_properties['id_str'] = v_id_str
         g.vertex_properties['screen_name'] = v_screen_name
         g.vertex_properties['name'] = v_name
+        g.vertex_properties['created_at'] = v_created_at
 
         # add PropertyMap to store weights
         eprop = g.new_edge_property('int')

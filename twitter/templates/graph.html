@@ -566,7 +566,7 @@ function change_background(value) {
 		<div class="col align-middle text-center">
 		<input type="button" class="btn btn-light btn-sm" id="change-background" value="Light background" onclick="change_background(this.value)">
 			<a class="btn btn-info btn-sm" href="{{ graph.get_json }}" download="{{ graph.metric.name | slugify }}.json">Download JSON</a>
-			<a class="btn btn-info btn-sm" href="{{ graph.get_xml }}" download="{{ graph.metric.name | slugify }}.graphml.gz">Download XML</a>
+			<a class="btn btn-info btn-sm" href="{{ graph.get_xml }}" download="{{ graph.metric.name | slugify }}.graphml">GraphML</a>
 
 	</div>
 </div>
