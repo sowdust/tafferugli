@@ -717,9 +717,14 @@ class MetricGraphCommunityNetwork(Metric):
             Q(pk__in=self.twitter_users.all())
             | Q(followed_by__in=self.twitter_users.all())
             | Q(friended_by__in=self.twitter_users.all())).distinct()
-        user_attributes = all_users.values_list('id_str', 'screen_name', 'name')
+        user_attributes = all_users.values_list('id_str', 'screen_name', 'name', 'created_at')
 
         g = Graph(directed=True)
+        v_id_str = g.new_vertex_property("string")
+        v_screen_name = g.new_vertex_property("string")
+        v_name = g.new_vertex_property("string")
+        v_created_at = g.new_vertex_property("string")
+
         # dictionary to keep track of vertex index and its related id_str
         indexes = {}
         logger.debug("[*] Adding nodes")
@@ -729,6 +734,20 @@ class MetricGraphCommunityNetwork(Metric):
             if not user_attributes[i][0]:
                 logger.error('Empty user!')
                 print(user_attributes[i])
+            else:
+                v_id_str[v] = user_attributes[i][0]
+                v_screen_name[v] = user_attributes[i][1]
+                v_name[v] = user_attributes[i][2]
+                try:
+                    v_created_at[v] = user_attributes[i][3].strftime('%Y-%m-%d %H:%M')
+                except:
+                    v_created_at[v] = ''
+
+                    # save properties as internal in graph
+        g.vertex_properties['id_str'] = v_id_str
+        g.vertex_properties['screen_name'] = v_screen_name
+        g.vertex_properties['name'] = v_name
+        g.vertex_properties['created_at'] = v_created_at
 
         eprop = g.new_edge_property('int')
         g.edge_properties['weight'] = eprop
@@ -755,15 +774,17 @@ class MetricGraphCommunityNetwork(Metric):
 
         community_graph.save()
 
-        logger.debug("[*] Saving graph")
+        logger.debug("[*] Saving graph in graphml format")
         g.save(community_graph.xml.path, fmt='graphml')
-        print('[*] Computing degree')
+
+        print('[*] Computing graph degree')
         vertices = g.get_vertices()
         out_degrees = {i: g.get_out_degrees([i])[0] for i in range(len(vertices))}
 
-        print('[*] Computing position')
+        print('[*] Computing graph position')
         pos = sfdp_layout(g)
-        print('[*] Minimizing')
+
+        print('[*] Detecting communities')
         state = minimize_blockmodel_dl(
             g, layers=True, state_args=dict(eweight=g.edge_properties['weight'], ec=g.ep.interaction_type, layers=True))
         blocks = state.get_blocks()
@@ -772,14 +793,16 @@ class MetricGraphCommunityNetwork(Metric):
         self.create_communities(vertices, user_attributes, blocks)
 
         logger.debug('[*] Saving image to %s' % svg_file.name)
-        state.draw(pos=pos, output=community_graph.svg.path, fmt='svg', output_size=(2000, 2000))
+        state.draw(
+            pos=pos, output=community_graph.svg.path, fmt='svg', output_size=(2000, 2000),
+            edge_color=g.ep.interaction_type, edge_gradient=[], edge_pen_width=prop_to_size(g.ep.weight, 2, 8, power=1))
         logger.debug('[*] Converting svg image to %s' % png_file.name)
         drawing = svg2rlg(community_graph.svg.path)
         renderPM.drawToFile(drawing, community_graph.png.path, fmt='PNG', bg=0x444444)
 
         logger.debug('[*] Getting json data')
         data = _generate_js_graph(vertices, edges, pos, blocks, user_attributes, out_degrees, weights, self.min_degree)
-        logger.debug('[*] Writing json data %s' % json_file.name)
+        logger.debug('[*] Writing json data %s' % community_graph.json.path)
         with open(community_graph.json.path, 'w') as j:
             jsonpkg.dump(data, j)
 
