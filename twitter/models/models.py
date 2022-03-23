@@ -1,7 +1,7 @@
 import atexit
 import enum
 import os
-
+import pytz
 import tweepy
 import requests
 import logging
@@ -30,7 +30,7 @@ if settings.FUZZY_COUNT:
 logger = logging.getLogger(__name__)
 
 
-class MyStreamListener(tweepy.StreamListener):
+class MyStreamListener(tweepy.Stream):
     streamer = None
     entities = None
     tweepy_streams = {}
@@ -1022,7 +1022,7 @@ class TwitterUser(models.Model):
         self.listed_count = status_user.listed_count
         self.favourites_count = status_user.favourites_count
         self.statuses_count = status_user.statuses_count
-        self.created_at = timezone.make_aware(status_user.created_at)
+        self.created_at = status_user.created_at.replace(tzinfo=pytz.utc).astimezone(pytz.timezone(settings.TIME_ZONE))
         self.profile_banner_url = status_user.profile_banner_url if hasattr(
             status_user, 'profile_banner_url') else None
         self.profile_image_url_https = status_user.profile_image_url_https if hasattr(
@@ -1051,7 +1051,7 @@ class TwitterUser(models.Model):
                 u.listed_count = status_user.listed_count
                 u.favourites_count = status_user.favourites_count
                 u.statuses_count = status_user.statuses_count
-                u.created_at = timezone.make_aware(status_user.created_at)
+                u.created_at = status_user.created_at.replace(tzinfo=pytz.utc).astimezone(pytz.timezone(settings.TIME_ZONE))
                 u.profile_banner_url = status_user.profile_banner_url if hasattr(
                     status_user, 'profile_banner_url') else None
                 u.profile_image_url_https = status_user.profile_image_url_https if hasattr(
@@ -1248,7 +1248,7 @@ class Tweet(models.Model):
                 t = cls(
                     id_str=status.id_str,
                     id_int=status.id,
-                    created_at=timezone.make_aware(status.created_at),
+                    created_at=status.created_at.replace(tzinfo=pytz.utc).astimezone(pytz.timezone(settings.TIME_ZONE)),
                     text=status.extended_tweet['full_text'] if hasattr(status, 'extended_tweet') else status.text,
                     source=TweetSource.objects.get_or_create(name=status.source, url=status.source_url)[0],
                     # TODO source as objects / entities / observables
