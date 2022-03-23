@@ -77,13 +77,18 @@ def background_stream(streamer_id):
             #    break
             try:
                 attempts += 1
-                with MyStreamListener() as myStreamListener:
+                api_keys = streamer.get_api_keys()
+                consumer_key = api_keys['consumer_key']
+                consumer_secret = api_keys['consumer_secret']
+                access_token = api_keys['access_token']
+                access_token_secret = api_keys['access_token_secret']
+                with MyStreamListener(consumer_key, consumer_secret, access_token,
+                                      access_token_secret) as myStreamListener:
                     myStreamListener.set_streamer(streamer)
                     myStreamListener.set_entities(tracking_entities)
                     logger.warning("[*] Starting tracking streamer for entities %s " % tracking_terms)
-                    myStream = tweepy.Stream(auth=api.auth, listener=myStreamListener)
-                    myStreamListener.set_tweepy_stream(myStream, streamer.id)
-                    myStream.filter(track=tracking_terms, is_async=False)
+                    myStreamListener.set_tweepy_stream(myStreamListener, streamer.id)
+                    myStreamListener.filter(track=tracking_terms)
             except Exception as ex:
                 logger.error('Exception during streamer %d attempt for %s' % (attempts, streamer))
                 logger.error(ex)
